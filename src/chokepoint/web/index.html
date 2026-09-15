@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChokePoint AI</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main>
+    <h1>ChokePoint AI</h1>
+    <p class="subtitle">Supply Chain Shock Simulator — placeholder UI, Day 1 vertical slice.</p>
+    <p class="note">
+      This page is intentionally minimal. It talks to
+      <code>POST /api/v1/simulate</code> using only stub providers today —
+      the full Cytoscape.js graph view, feed panel, and what-if slider arrive
+      once the real graph (Person 1) and LLM agent (Person 2) land.
+    </p>
+
+    <section>
+      <label for="text-input">Describe an event (or leave blank to use the sample below):</label>
+      <textarea id="text-input" rows="4" placeholder="e.g. A dockworker strike has halted operations at Hamburg Port..."></textarea>
+      <div class="actions">
+        <button id="run-btn" type="button">Run simulation</button>
+        <span id="status"></span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Result</h2>
+      <pre id="result">No simulation run yet.</pre>
+    </section>
+  </main>
+
+  <script>
+    const SAMPLE_EVENT = {
+      event: {
+        event_type: "strike",
+        locations: [{ raw: "Hamburg Port", node_id: "port_hamburg", country_iso2: "DE" }],
+        affected_goods: ["auto parts", "electronics"],
+        severity: 4,
+        confidence: 0.8,
+        summary: "Sample: dockworker strike at Hamburg Port.",
+      },
+    };
+
+    const textInput = document.getElementById("text-input");
+    const runBtn = document.getElementById("run-btn");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+
+    runBtn.addEventListener("click", async () => {
+      const text = textInput.value.trim();
+      const body = text ? { text } : SAMPLE_EVENT;
+
+      statusEl.textContent = "Running...";
+      resultEl.textContent = "";
+      runBtn.disabled = true;
+
+      try {
+        const resp = await fetch("/api/v1/simulate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await resp.json();
+        resultEl.textContent = JSON.stringify(data, null, 2);
+        statusEl.textContent = resp.ok ? `done (${resp.status})` : `error (${resp.status})`;
+      } catch (err) {
+        statusEl.textContent = "request failed";
+        resultEl.textContent = String(err);
+      } finally {
+        runBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
