@@ -1,0 +1,52 @@
+# Deploys by pushing this repo directly to the Hugging Face Space's git
+# remote; the Space rebuilds itself from the pushed Dockerfile. There is no
+# container registry step and no Terraform — infra is Docker + docker-compose
+# + GitHub Actions only (see ARCHITECTURE_AND_PLAN.md §10, Scope Adjustment
+# in PROMPT_P3_BACKEND_DEVOPS.md).
+#
+# Required repo secrets (set manually via GitHub Settings -> Secrets -> Actions,
+# no automation creates these):
+#   HF_TOKEN — a Hugging Face write token (hf.co/settings/tokens)
+#   HF_SPACE — the target Space, e.g. "username/chokepoint-ai"
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Docker image (smoke check)
+        run: docker build -t chokepoint-ai:deploy .
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          git remote add space "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}"
+          git push space HEAD:main --force
+
+      - name: Smoke test the deployed Space
+        env:
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          SPACE_SLUG=$(echo "$HF_SPACE" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+          URL="https://${SPACE_SLUG}.hf.space/healthz"
+          for i in $(seq 1 12); do
+            if curl -sf "$URL" | grep -q '"ok"'; then
+              echo "Space is healthy: $URL"
+              exit 0
+            fi
+            echo "Waiting for Space to come up... ($i/12)"
+            sleep 5
+          done
+          echo "Space did not become healthy within 60s: $URL"
+          exit 1

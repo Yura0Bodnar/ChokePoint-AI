@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install 3.12
+
+      - name: Sync dependencies
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Typecheck
+        run: uv run mypy src/chokepoint/contracts.py
+
+      - name: Test
+        run: uv run pytest -m "not live" --cov=chokepoint --cov-report=term-missing
+
+      - name: Build Docker image
+        run: docker build -t chokepoint-ai:ci .

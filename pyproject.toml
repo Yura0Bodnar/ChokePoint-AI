@@ -1,0 +1,58 @@
+[project]
+name = "chokepoint"
+version = "0.1.0"
+description = "ChokePoint AI — Supply Chain Shock Simulator"
+readme = "README.md"
+authors = [
+    { name = "Yurii Bodnar", email = "yurii.bodnar@globallogic.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "httpx>=0.27",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "python-dotenv>=1.0",
+    "uvicorn[standard]>=0.32",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.14,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13",
+    "pre-commit>=4.0",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# The planning docs (ARCHITECTURE_AND_PLAN.md, PROMPT_*.md) contain
+# illustrative, sometimes-abridged code snippets that are not meant to be
+# literal, canonically-formatted modules — exclude markdown from lint/format.
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF", "ASYNC"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = ["chokepoint.contracts"]
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = ["live: hits a real external API; excluded from CI (run with -m live)"]
+addopts = "-m 'not live' --strict-markers"
