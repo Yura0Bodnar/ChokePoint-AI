@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# ChokePoint-AI
-=======
 # ChokePoint AI
 
 **Supply Chain Shock Simulator.** Ingest geopolitical / logistics news, extract a structured
@@ -66,4 +63,3 @@ CI (`.github/workflows/ci.yml`) lints, type-checks, tests, and builds the Docker
 every push. `.github/workflows/deploy.yml` pushes `main` directly to a Hugging Face Space's
 git remote on merge — no container registry, no Terraform. Requires the repo secrets
 `HF_TOKEN` and `HF_SPACE`, set manually via GitHub Settings → Secrets.
->>>>>>> b1ee98e (feat(api): bootstrap FastAPI skeleton, DI stubs, Docker, CI/CD)
