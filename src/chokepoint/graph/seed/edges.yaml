@@ -1,0 +1,210 @@
+- source: port_hamburg
+  target: route_north_sea
+  type: transits
+  weight: 0.72
+  lead_time_days: 1
+  source_ref: "Eurostat maritime freight statistics 2023, Hamburg North Sea flows"
+- source: port_rotterdam
+  target: route_north_sea
+  type: transits
+  weight: 0.78
+  lead_time_days: 1
+  source_ref: "Eurostat maritime freight statistics 2023, Rotterdam North Sea flows"
+- source: port_antwerp
+  target: route_north_sea
+  type: transits
+  weight: 0.64
+  lead_time_days: 1
+  source_ref: "Eurostat maritime freight statistics 2023, Antwerp North Sea flows"
+- source: route_north_sea
+  target: com_auto_parts
+  type: handles
+  weight: 0.54
+  lead_time_days: 3
+  source_ref: "Eurostat 2023 maritime freight, North Sea automotive goods"
+- source: route_north_sea
+  target: com_chemicals
+  type: handles
+  weight: 0.42
+  lead_time_days: 4
+  source_ref: "Eurostat 2023 maritime freight, North Sea chemical goods"
+- source: route_north_sea
+  target: com_containers
+  type: handles
+  weight: 0.60
+  lead_time_days: 2
+  source_ref: "Port of Rotterdam throughput report 2023, container volumes"
+- source: port_hamburg
+  target: com_auto_parts
+  type: handles
+  weight: 0.34
+  lead_time_days: 3
+  source_ref: "Eurostat 2023 maritime freight, DE auto components"
+- source: port_rotterdam
+  target: com_auto_parts
+  type: handles
+  weight: 0.28
+  lead_time_days: 4
+  source_ref: "Eurostat 2023 maritime freight, NL auto components"
+- source: port_antwerp
+  target: com_auto_parts
+  type: handles
+  weight: 0.22
+  lead_time_days: 4
+  source_ref: "Eurostat 2023 maritime freight, BE auto components"
+- source: port_hamburg
+  target: com_chemicals
+  type: handles
+  weight: 0.30
+  lead_time_days: 4
+  source_ref: "Eurostat 2023 maritime freight, DE chemical products"
+- source: port_rotterdam
+  target: com_chemicals
+  type: handles
+  weight: 0.35
+  lead_time_days: 4
+  source_ref: "Eurostat 2023 maritime freight, NL chemical products"
+- source: port_antwerp
+  target: com_chemicals
+  type: handles
+  weight: 0.25
+  lead_time_days: 4
+  source_ref: "Eurostat 2023 maritime freight, BE chemical products"
+- source: route_north_sea
+  target: route_rhine
+  type: transits
+  weight: 0.48
+  lead_time_days: 2
+  source_ref: "CCNR annual inland navigation market observation 2023"
+- source: com_auto_parts
+  target: ind_auto_parts_de
+  type: supplies
+  weight: 0.55
+  lead_time_days: 5
+  source_ref: "Destatis automotive production and input table 2022"
+- source: com_auto_parts
+  target: ind_auto_parts_pl
+  type: supplies
+  weight: 0.61
+  lead_time_days: 6
+  source_ref: "GUS Poland industrial input-output table 2022"
+- source: com_auto_parts
+  target: ind_auto_parts_cz
+  type: supplies
+  weight: 0.52
+  lead_time_days: 6
+  source_ref: "Czech Statistical Office automotive industry table 2022"
+- source: com_chemicals
+  target: ind_chemicals_de
+  type: supplies
+  weight: 0.66
+  lead_time_days: 5
+  source_ref: "Destatis chemical manufacturing input table 2022"
+- source: com_containers
+  target: ind_logistics_cee
+  type: supplies
+  weight: 0.58
+  lead_time_days: 5
+  source_ref: "Eurostat road freight transport by region 2023"
+- source: route_rhine
+  target: ind_logistics_cee
+  type: supplies
+  weight: 0.46
+  lead_time_days: 3
+  source_ref: "CCNR Rhine freight performance report 2023"
+- source: ind_auto_parts_de
+  target: mkt_germany
+  type: supplies
+  weight: 0.63
+  lead_time_days: 7
+  source_ref: "Destatis motor vehicle production 2023"
+- source: ind_auto_parts_de
+  target: mkt_cee_retail
+  type: supplies
+  weight: 0.24
+  lead_time_days: 9
+  source_ref: "Eurostat intra-EU automotive goods trade, Germany to CEE 2023"
+- source: ind_auto_parts_pl
+  target: mkt_poland
+  type: supplies
+  weight: 0.65
+  lead_time_days: 7
+  source_ref: "GUS manufacturing output 2023"
+- source: ind_auto_parts_cz
+  target: mkt_czechia
+  type: supplies
+  weight: 0.62
+  lead_time_days: 7
+  source_ref: "Czech Statistical Office manufacturing output 2023"
+- source: ind_chemicals_de
+  target: mkt_germany
+  type: supplies
+  weight: 0.52
+  lead_time_days: 8
+  source_ref: "Destatis chemical products output 2023"
+- source: ind_logistics_cee
+  target: mkt_poland
+  type: supplies
+  weight: 0.44
+  lead_time_days: 6
+  source_ref: "Eurostat regional road freight Poland 2023"
+- source: ind_logistics_cee
+  target: mkt_czechia
+  type: supplies
+  weight: 0.38
+  lead_time_days: 6
+  source_ref: "Eurostat regional road freight Czechia 2023"
+- source: ind_logistics_cee
+  target: mkt_cee_retail
+  type: supplies
+  weight: 0.42
+  lead_time_days: 9
+  source_ref: "Eurostat wholesale and retail trade region data 2023"
+- source: mkt_germany
+  target: mkt_cee_retail
+  type: depends_on
+  weight: 0.30
+  lead_time_days: 5
+  source_ref: "Eurostat intra-EU trade by destination 2023"
+- source: mkt_poland
+  target: mkt_ukraine_aftermarket
+  type: supplies
+  weight: 0.47
+  lead_time_days: 10
+  source_ref: "UN Comtrade 2023 Poland-UA automotive parts trade"
+- source: mkt_cee_retail
+  target: mkt_ukraine_aftermarket
+  type: supplies
+  weight: 0.28
+  lead_time_days: 12
+  source_ref: "UN Comtrade 2023 EU-UA vehicle parts trade"
+- source: mkt_czechia
+  target: mkt_ukraine_aftermarket
+  type: supplies
+  weight: 0.19
+  lead_time_days: 11
+  source_ref: "UN Comtrade 2023 Czechia-UA vehicle parts trade"
+- source: mkt_poland
+  target: mkt_baltic
+  type: supplies
+  weight: 0.32
+  lead_time_days: 8
+  source_ref: "UN Comtrade 2023 Poland-Baltic automotive parts trade"
+- source: mkt_poland
+  target: mkt_balkans
+  type: supplies
+  weight: 0.21
+  lead_time_days: 9
+  source_ref: "UN Comtrade 2023 Poland-Balkans parts trade"
+- source: mkt_czechia
+  target: mkt_balkans
+  type: supplies
+  weight: 0.18
+  lead_time_days: 9
+  source_ref: "UN Comtrade 2023 Czechia-Balkans parts trade"
+- source: com_auto_parts
+  target: mkt_ukraine_aftermarket
+  type: supplies
+  weight: 0.16
+  lead_time_days: 12
+  source_ref: "UN Comtrade 2023 EU-UA automotive components trade"

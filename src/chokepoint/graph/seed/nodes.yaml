@@ -1,0 +1,140 @@
+- id: port_hamburg
+  label: "Port of Hamburg"
+  type: port
+  country: DE
+  criticality: 0.85
+  resilience: 0.30
+  substitutes: [port_rotterdam, port_antwerp]
+- id: port_rotterdam
+  label: "Port of Rotterdam"
+  type: port
+  country: NL
+  criticality: 0.90
+  resilience: 0.35
+  substitutes: [port_hamburg, port_antwerp]
+- id: port_antwerp
+  label: "Port of Antwerp-Bruges"
+  type: port
+  country: BE
+  criticality: 0.82
+  resilience: 0.35
+  substitutes: [port_hamburg, port_rotterdam]
+- id: route_north_sea
+  label: "North Sea maritime corridor"
+  type: route
+  country: EU
+  criticality: 0.80
+  resilience: 0.25
+  substitutes: []
+- id: route_rhine
+  label: "Rhine inland freight route"
+  type: route
+  country: EU
+  criticality: 0.68
+  resilience: 0.30
+  substitutes: []
+- id: com_auto_parts
+  label: "Automotive components (commodity)"
+  type: commodity
+  country: EU
+  criticality: 0.76
+  resilience: 0.25
+  substitutes: [com_containers]
+- id: com_chemicals
+  label: "Industrial chemicals"
+  type: commodity
+  country: EU
+  criticality: 0.70
+  resilience: 0.28
+  substitutes: []
+- id: com_containers
+  label: "Containerized manufactured goods"
+  type: commodity
+  country: EU
+  criticality: 0.72
+  resilience: 0.35
+  substitutes: [port_rotterdam, port_antwerp]
+- id: ind_auto_parts_de
+  label: "German automotive components industry"
+  type: industry
+  country: DE
+  criticality: 0.72
+  resilience: 0.32
+  substitutes: []
+- id: ind_auto_parts_pl
+  label: "Polish automotive components industry"
+  type: industry
+  country: PL
+  criticality: 0.60
+  resilience: 0.25
+  substitutes: []
+- id: ind_auto_parts_cz
+  label: "Czech automotive components industry"
+  type: industry
+  country: CZ
+  criticality: 0.58
+  resilience: 0.28
+  substitutes: []
+- id: ind_chemicals_de
+  label: "German chemical manufacturing"
+  type: industry
+  country: DE
+  criticality: 0.66
+  resilience: 0.30
+  substitutes: []
+- id: ind_logistics_cee
+  label: "Central and Eastern European logistics"
+  type: industry
+  country: PL
+  criticality: 0.62
+  resilience: 0.30
+  substitutes: [route_rhine]
+- id: mkt_germany
+  label: "German industrial market"
+  type: market
+  country: DE
+  criticality: 0.75
+  resilience: 0.40
+  substitutes: []
+- id: mkt_poland
+  label: "Polish manufacturing market"
+  type: market
+  country: PL
+  criticality: 0.63
+  resilience: 0.35
+  substitutes: []
+- id: mkt_czechia
+  label: "Czech manufacturing market"
+  type: market
+  country: CZ
+  criticality: 0.58
+  resilience: 0.35
+  substitutes: []
+- id: mkt_cee_retail
+  label: "Central European retail market"
+  type: market
+  country: EU
+  criticality: 0.55
+  resilience: 0.38
+  substitutes: []
+- id: mkt_ukraine_aftermarket
+  label: "Ukrainian automotive aftermarket"
+  type: market
+  country: UA
+  criticality: 0.48
+  resilience: 0.22
+  substitutes: [mkt_poland, mkt_cee_retail]
+- id: mkt_baltic
+  label: "Baltic parts market"
+  type: market
+  country: LV
+  criticality: 0.42
+  resilience: 0.32
+  substitutes: [mkt_poland]
+- id: mkt_balkans
+  label: "Balkan automotive market"
+  type: market
+  country: RO
+  criticality: 0.45
+  resilience: 0.30
+  substitutes: [mkt_cee_retail]
