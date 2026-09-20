@@ -1,0 +1,1 @@
+{"event_type": "strike", "locations": [{"raw": "Port of Hamburg", "node_id": null, "country_iso2": "DE"}], "affected_goods": ["automotive parts", "consumer electronics"], "severity": 3, "estimated_duration_days": 2, "confidence": 0.91, "summary": "A 48-hour dockworker strike has halted container handling at the Port of Hamburg, delaying automotive parts and electronics."}

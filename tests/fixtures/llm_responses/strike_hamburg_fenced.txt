@@ -1,0 +1,17 @@
+Sure, here's the JSON you asked for:
+
+```json
+{
+  "event_type": "strike",
+  "locations": [
+    {"raw": "Hamburg Port", "node_id": null, "country_iso2": "DE"}
+  ],
+  "affected_goods": ["auto parts"],
+  "severity": 3,
+  "estimated_duration_days": 2,
+  "confidence": 0.88,
+  "summary": "Dockworkers at Hamburg Port walked out for 48 hours, halting container operations."
+}
+```
+
+Let me know if you need anything else!

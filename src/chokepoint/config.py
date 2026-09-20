@@ -15,7 +15,16 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     demo_mode: bool = False
 
-    llm_provider: str = "stub"  # hf | local | stub — real values arrive with P2's PR
+    llm_provider: str = "stub"  # hf | local | stub — see agent/providers/factory.py
+    hf_token: str = ""
+    hf_model: str = "openai/gpt-oss-20b"  # measured in docs/PROMPTS.md §3
+    hf_inference_provider: str = "auto"
+    llm_temperature: float = 0.0
+    llm_max_tokens: int = 512
+    llm_max_retries: int = 3
+    llm_failover_to_local: bool = True  # hf → local on 402 / network failure
+    local_model: str = "Qwen/Qwen2.5-1.5B-Instruct"  # P2.8 CPU fallback
+    local_device: str = "cpu"
     graph_backend: str = "networkx"  # networkx | kuzu — real values arrive with P1's PR
 
     sim_max_hops: int = 4

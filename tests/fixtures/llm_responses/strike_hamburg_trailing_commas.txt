@@ -1,0 +1,1 @@
+{'event_type': 'strike', 'locations': [{'raw': 'Hamburg harbor', 'node_id': None, 'country_iso2': 'DE',},], 'affected_goods': ['auto parts',], 'severity': 3, 'estimated_duration_days': 2, 'confidence': 0.85, 'summary': 'Strike halts operations at Hamburg harbor.',}

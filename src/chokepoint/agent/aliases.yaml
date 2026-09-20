@@ -1,0 +1,116 @@
+# aliases.yaml — entity → graph node_id resolution table.
+#
+# CO-OWNED with Person 1: every key must be a node id that exists in their
+# seed graph. The four ids below are the shared placeholder vocabulary used
+# identically across all foundation branches — do not rename them.
+#
+# Values are raw strings the LLM is likely to extract verbatim from an
+# article. Matching is case-insensitive and punctuation-insensitive; a
+# leading "the" / "Port of" is also tolerated, so "Hamburg" alone covers
+# "Port of Hamburg" — the explicit variants are kept for readability.
+
+# ── ports / chokepoints ──────────────────────────────────────────────
+port_hamburg:
+  - "Hamburg"
+  - "Hamburg Port"
+  - "Port of Hamburg"
+  - "Hamburg harbor"
+  - "Hamburg harbour"
+  - "Hamburger Hafen"
+port_rotterdam:
+  - "Rotterdam"
+  - "Port of Rotterdam"
+  - "Rotterdam Port"
+port_antwerp:
+  - "Antwerp"
+  - "Port of Antwerp"
+  - "Antwerp-Bruges"
+  - "Port of Antwerp-Bruges"
+port_gdansk:
+  - "Gdansk"
+  - "Gdańsk"
+  - "Port of Gdansk"
+  - "Port of Gdańsk"
+port_constanta:
+  - "Constanta"
+  - "Constanța"
+  - "Port of Constanta"
+port_odesa:
+  - "Odesa"
+  - "Odessa"
+  - "Port of Odesa"
+  - "Port of Odessa"
+port_piraeus:
+  - "Piraeus"
+  - "Port of Piraeus"
+port_koper:
+  - "Koper"
+  - "Port of Koper"
+chokepoint_suez:
+  - "Suez Canal"
+  - "Suez"
+chokepoint_red_sea:
+  - "Red Sea"
+  - "Bab el-Mandeb"
+  - "Bab al-Mandab"
+chokepoint_bosphorus:
+  - "Bosphorus"
+  - "Bosporus"
+  - "Turkish Straits"
+chokepoint_hormuz:
+  - "Strait of Hormuz"
+  - "Hormuz"
+chokepoint_panama:
+  - "Panama Canal"
+chokepoint_malacca:
+  - "Strait of Malacca"
+  - "Malacca Strait"
+
+# ── commodities ──────────────────────────────────────────────────────
+com_auto_parts:
+  - "auto parts"
+  - "automotive parts"
+  - "automotive components"
+  - "car parts"
+  - "vehicle components"
+com_electronics:
+  - "electronics"
+  - "consumer electronics"
+com_semiconductors:
+  - "semiconductors"
+  - "chips"
+  - "microchips"
+com_grain:
+  - "grain"
+  - "wheat"
+  - "corn"
+  - "maize"
+com_steel:
+  - "steel"
+  - "steel products"
+com_crude_oil:
+  - "crude oil"
+  - "crude"
+  - "oil"
+com_lng:
+  - "lng"
+  - "liquefied natural gas"
+  - "natural gas"
+
+# ── industries ───────────────────────────────────────────────────────
+ind_auto_parts_pl:
+  - "Polish automotive industry"
+  - "Poland auto parts sector"
+  - "Polish auto parts industry"
+  - "Polish automotive components industry"
+ind_auto_de:
+  - "German automotive industry"
+  - "German carmakers"
+  - "German car industry"
+
+# ── markets ──────────────────────────────────────────────────────────
+mkt_ukraine_aftermarket:
+  - "Ukrainian aftermarket"
+  - "Ukraine auto market"
+  - "Ukrainian automotive aftermarket"
+  - "Ukrainian car market"
