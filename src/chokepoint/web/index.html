@@ -3,76 +3,172 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
   <title>ChokePoint AI</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%A2%3C/text%3E%3C/svg%3E" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js"></script>
   <link rel="stylesheet" href="/style.css" />
 </head>
-<body>
-  <main>
-    <h1>ChokePoint AI</h1>
-    <p class="subtitle">Supply Chain Shock Simulator — placeholder UI, Day 1 vertical slice.</p>
-    <p class="note">
-      This page is intentionally minimal. It talks to
-      <code>POST /api/v1/simulate</code> using only stub providers today —
-      the full Cytoscape.js graph view, feed panel, and what-if slider arrive
-      once the real graph (Person 1) and LLM agent (Person 2) land.
-    </p>
+<body class="min-h-screen bg-gray-100 text-gray-700 antialiased">
+  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 
-    <section>
-      <label for="text-input">Describe an event (or leave blank to use the sample below):</label>
-      <textarea id="text-input" rows="4" placeholder="e.g. A dockworker strike has halted operations at Hamburg Port..."></textarea>
-      <div class="actions">
-        <button id="run-btn" type="button">Run simulation</button>
-        <span id="status"></span>
+    <!-- ── Header ─────────────────────────────────────────────────────── -->
+    <header class="flex flex-wrap items-baseline justify-between gap-2">
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">ChokePoint AI</h1>
+        <p class="text-base text-gray-600">Supply Chain Shock Simulator — OSINT in, cascading impact forecast out.</p>
+      </div>
+      <span
+        id="degraded-badge"
+        hidden
+        tabindex="0"
+        data-tip="This run used a fallback or stub component, not the live LLM/graph path."
+        class="rounded-full border border-amber-500 bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-900"
+      >⚠ degraded run</span>
+    </header>
+
+    <!-- ── Visual pipeline explainer ──────────────────────────────────── -->
+    <section aria-label="How it works" class="mt-6">
+      <div class="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+
+        <div tabindex="0" class="pipeline-step is-active flex flex-1 items-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm"
+             data-tip="Paste a headline, or a real scraper feeds in GDELT/RSS articles automatically.">
+          <span class="pipeline-step-num flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-200 text-base font-bold text-gray-800">1</span>
+          <div>
+            <p class="text-base font-bold text-gray-900">Ingest News</p>
+            <p class="text-sm text-gray-600">Raw OSINT text in</p>
+          </div>
+        </div>
+
+        <span class="pipeline-arrow self-center text-2xl font-bold sm:rotate-0 rotate-90">→</span>
+
+        <div tabindex="0" class="pipeline-step flex flex-1 items-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm"
+             data-tip="An LLM agent extracts a strict, schema-validated JSON event: type, locations, goods, severity.">
+          <span class="pipeline-step-num flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-200 text-base font-bold text-gray-800">2</span>
+          <div>
+            <p class="text-base font-bold text-gray-900">LLM Agent Extracts JSON</p>
+            <p class="text-sm text-gray-600">Structured disruption event</p>
+          </div>
+        </div>
+
+        <span class="pipeline-arrow self-center text-2xl font-bold sm:rotate-0 rotate-90">→</span>
+
+        <div tabindex="0" class="pipeline-step flex flex-1 items-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm"
+             data-tip="The event is overlaid on a dependency graph and propagated hop by hop with decay.">
+          <span class="pipeline-step-num flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-200 text-base font-bold text-gray-800">3</span>
+          <div>
+            <p class="text-base font-bold text-gray-900">Graph Simulates Impact</p>
+            <p class="text-sm text-gray-600">Cascading impact forecast</p>
+          </div>
+        </div>
+
       </div>
     </section>
 
-    <section>
-      <h2>Result</h2>
-      <pre id="result">No simulation run yet.</pre>
-    </section>
-  </main>
+    <!-- ── Main 3-column layout: input/JSON → graph → forecast/what-if ── -->
+    <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)_minmax(0,310px)] xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)_minmax(0,360px)]">
 
-  <script>
-    const SAMPLE_EVENT = {
-      event: {
-        event_type: "strike",
-        locations: [{ raw: "Hamburg Port", node_id: "port_hamburg", country_iso2: "DE" }],
-        affected_goods: ["auto parts", "electronics"],
-        severity: 4,
-        confidence: 0.8,
-        summary: "Sample: dockworker strike at Hamburg Port.",
-      },
-    };
+      <!-- LEFT / TOP: input + extracted JSON -->
+      <aside class="flex flex-col gap-4">
+        <div class="rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+          <label for="text-input" class="mb-2 text-base font-bold text-gray-900">
+            News headline / article text
+            <span data-tip="Paste any logistics-related headline. We've pre-filled an example — just hit Simulate." tabindex="0" class="ml-1 inline-block align-middle text-gray-600">ⓘ</span>
+          </label>
+          <textarea
+            id="text-input"
+            rows="4"
+            class="w-full resize-y rounded-lg border border-gray-400 bg-white p-2.5 text-base text-gray-900 placeholder-gray-500 focus:border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-700/30"
+            placeholder="e.g. Port Workers Strike in Hamburg"
+          >Port Workers Strike in Hamburg halts container operations, delaying auto parts shipments to Poland.</textarea>
 
-    const textInput = document.getElementById("text-input");
-    const runBtn = document.getElementById("run-btn");
-    const statusEl = document.getElementById("status");
-    const resultEl = document.getElementById("result");
+          <div class="mt-3 flex items-center gap-3">
+            <button
+              id="run-btn"
+              type="button"
+              data-tip="Runs the full pipeline: LLM extraction → graph simulation."
+              class="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-5 py-2.5 text-base font-bold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-60"
+            >
+              <span id="run-spinner" class="spinner" hidden></span>
+              <span id="run-label">Simulate</span>
+            </button>
+            <span id="status" class="text-sm text-gray-600"></span>
+          </div>
 
-    runBtn.addEventListener("click", async () => {
-      const text = textInput.value.trim();
-      const body = text ? { text } : SAMPLE_EVENT;
+          <p id="error-banner" hidden class="mt-3 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-800"></p>
+        </div>
 
-      statusEl.textContent = "Running...";
-      resultEl.textContent = "";
-      runBtn.disabled = true;
+        <div class="rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+          <h2 class="mb-2 text-base font-bold text-gray-900">
+            Extracted event (proof the LLM works)
+            <span data-tip="This is the exact structured JSON the extraction agent produced — no hand-editing." tabindex="0" class="ml-1 inline-block align-middle text-gray-600">ⓘ</span>
+          </h2>
+          <pre id="event-json" class="scroll-thin max-h-72 overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-[13px] leading-snug text-gray-800">Run a simulation to see the extracted JSON.</pre>
+          <p id="unresolved-note" hidden class="mt-2 text-sm font-medium text-amber-800"></p>
+        </div>
+      </aside>
 
-      try {
-        const resp = await fetch("/api/v1/simulate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const data = await resp.json();
-        resultEl.textContent = JSON.stringify(data, null, 2);
-        statusEl.textContent = resp.ok ? `done (${resp.status})` : `error (${resp.status})`;
-      } catch (err) {
-        statusEl.textContent = "request failed";
-        resultEl.textContent = String(err);
-      } finally {
-        runBtn.disabled = false;
-      }
-    });
-  </script>
+      <!-- CENTER / MAIN: interactive graph -->
+      <main class="flex flex-col rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-base font-bold text-gray-900">Impact graph</h2>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-gray-700">
+            <span class="flex items-center gap-1.5"><span class="inline-block h-3 w-3 rounded-full bg-red-600 ring-4 ring-red-200"></span>Epicentre</span>
+            <span class="flex items-center gap-1.5">
+              <span class="inline-block h-3 w-10 rounded-full" style="background:linear-gradient(to right,#f59e0b,#ea580c,#b91c1c)"></span>
+              Impacted (low → high)
+            </span>
+          </div>
+        </div>
+        <div id="cy" class="flex-1 rounded-lg border border-gray-300"></div>
+        <p id="graph-hint" class="mt-2 text-center text-sm text-gray-600">Run a simulation to see the impact graph.</p>
+      </main>
+
+      <!-- RIGHT / BOTTOM: what-if slider + forecast table -->
+      <aside class="flex flex-col gap-4">
+        <div class="rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+          <h2 class="mb-2 text-base font-bold text-gray-900">
+            What-if: severity
+            <span data-tip="Re-runs the graph simulation only — it reuses the already-extracted event, so it never calls the LLM again." tabindex="0" class="ml-1 inline-block align-middle text-gray-600">ⓘ</span>
+          </h2>
+          <div class="flex items-center gap-3">
+            <input id="severity-slider" type="range" min="1" max="5" step="1" value="3" disabled />
+            <span id="severity-value" class="w-6 shrink-0 text-center text-lg font-extrabold text-gray-900">3</span>
+          </div>
+          <div class="mt-2 flex justify-between text-xs font-medium text-gray-600">
+            <span>1 · minor</span>
+            <span>5 · corridor-closing</span>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+          <h2 class="mb-2 text-base font-bold text-gray-900">Forecast</h2>
+          <div class="scroll-thin max-h-[26rem] overflow-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="sticky top-0 bg-gray-100 text-xs uppercase tracking-wide text-gray-700">
+                <tr>
+                  <th class="px-1 py-2 font-bold">Node</th>
+                  <th class="px-1 py-2 font-bold">Impact</th>
+                  <th class="px-1 py-2 font-bold">ETA</th>
+                  <th class="px-1 py-2 font-bold">Hops</th>
+                </tr>
+              </thead>
+              <tbody id="forecast-rows">
+                <tr><td colspan="4" class="py-3 text-center text-gray-600">No forecast yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+    <footer class="mt-8 text-center text-sm text-gray-600">
+      Built for a hackathon demo · graph is rendered directly from each simulation response
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
 </body>
 </html>

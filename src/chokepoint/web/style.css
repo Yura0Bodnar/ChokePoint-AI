@@ -1,104 +1,165 @@
+/* Tailwind (via CDN, see index.html) handles layout, spacing and color
+   utilities. Everything here is stuff Tailwind's utility classes can't
+   express: the Cytoscape canvas, custom tooltips, the active pipeline step,
+   the range-slider thumb, the loading spinner and scrollbars.
+
+   Light theme, tuned for projectors: near-black text on white/light-gray
+   surfaces, every text pair at WCAG AA (4.5:1) or better. */
+
 :root {
-  color-scheme: light dark;
-  --bg: #0f172a;
-  --fg: #e2e8f0;
-  --muted: #94a3b8;
-  --accent: #63b3ed;
-  --panel: #1e293b;
-  --border: #334155;
+  color-scheme: light;
 }
 
-* {
-  box-sizing: border-box;
-}
-
+html,
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  line-height: 1.5;
+  height: 100%;
 }
 
-main {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 2rem 1.25rem;
-}
-
-h1 {
-  margin-bottom: 0.25rem;
-}
-
-.subtitle {
-  color: var(--muted);
-  margin-top: 0;
-}
-
-.note {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-section {
-  margin-top: 1.5rem;
-}
-
-label {
-  display: block;
-  margin-bottom: 0.4rem;
-  font-weight: 600;
-}
-
-textarea {
+/* ── Cytoscape canvas ─────────────────────────────────────────────────── */
+#cy {
   width: 100%;
-  background: var(--panel);
-  color: var(--fg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.6rem;
-  font-family: inherit;
-  resize: vertical;
+  min-height: 420px;
+  background: #ffffff;
 }
 
-.actions {
-  margin-top: 0.6rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+/* ── Custom tooltip ────────────────────────────────────────────────────
+   A single fixed-position element positioned and viewport-clamped by
+   app.js (pseudo-element tooltips overflowed the page on narrow screens).
+   Dark plate on a light page so it pops on a projector. */
+[data-tip] {
+  cursor: help;
 }
 
-button {
-  background: var(--accent);
-  color: #0f172a;
-  border: none;
+#tooltip {
+  position: fixed;
+  z-index: 100;
+  max-width: min(280px, calc(100vw - 16px));
+  background: #111827;
+  color: #f9fafb;
   border-radius: 6px;
-  padding: 0.5rem 1rem;
-  font-weight: 600;
+  padding: 7px 11px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  box-shadow: 0 6px 16px rgb(17 24 39 / 0.25);
+}
+
+#tooltip.is-visible {
+  opacity: 1;
+}
+
+/* ── Pipeline step connector ───────────────────────────────────────────── */
+.pipeline-step {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+.pipeline-step.is-active {
+  border-color: #1d4ed8;
+  background-color: #eff6ff;
+  box-shadow: 0 0 0 2px rgb(29 78 216 / 0.25);
+  transform: translateY(-1px);
+}
+
+.pipeline-step.is-active .pipeline-step-num {
+  background-color: #1d4ed8;
+  color: #ffffff;
+}
+
+.pipeline-arrow {
+  color: #6b7280;
+}
+
+/* ── Loading spinner (sits inside the blue Simulate button) ───────────── */
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid rgb(255 255 255 / 0.35);
+  border-top-color: #ffffff;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Severity slider ──────────────────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #f59e0b, #ea580c, #b91c1c);
+  outline: none;
+}
+
+input[type="range"]:disabled {
+  opacity: 0.45;
+}
+
+input[type="range"]:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #1f2937;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+  cursor: pointer;
+  margin-top: -7px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #1f2937;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
   cursor: pointer;
 }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-#status {
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
+/* ── Misc ──────────────────────────────────────────────────────────────── */
 pre {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  overflow-x: auto;
-  font-size: 0.85rem;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 999px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.25s ease;
 }
