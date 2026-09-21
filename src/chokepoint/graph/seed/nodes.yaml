@@ -138,3 +138,179 @@
   criticality: 0.45
   resilience: 0.30
   substitutes: [mkt_cee_retail]
+
+# ══════════════════════════════════════════════════════════════════════════
+# Corridor 2 — Suez / Red Sea: Asia–Europe container flows (electronics, machinery)
+# Ids match src/chokepoint/agent/aliases.yaml verbatim. Parameter rubric: SOURCES.md.
+# ══════════════════════════════════════════════════════════════════════════
+- id: chokepoint_suez
+  label: "Suez Canal"
+  type: route
+  country: EG
+  criticality: 0.92
+  resilience: 0.20
+  substitutes: []
+- id: chokepoint_red_sea
+  label: "Red Sea / Bab el-Mandeb"
+  type: route
+  country: INT
+  criticality: 0.90
+  resilience: 0.20
+  substitutes: []
+- id: route_cape_good_hope
+  label: "Cape of Good Hope route"
+  type: route
+  country: ZA
+  criticality: 0.55
+  resilience: 0.45
+  substitutes: []
+- id: port_piraeus
+  label: "Port of Piraeus"
+  type: port
+  country: GR
+  criticality: 0.70
+  resilience: 0.30
+  substitutes: []
+- id: route_land_sea_express
+  label: "Land-Sea Express rail"
+  type: route
+  country: EU
+  criticality: 0.45
+  resilience: 0.35
+  substitutes: []
+- id: com_electronics
+  label: "Electronics (Asia-Europe)"
+  type: commodity
+  country: EU
+  criticality: 0.78
+  resilience: 0.30
+  substitutes: [route_cape_good_hope]
+- id: com_semiconductors
+  label: "Semiconductors"
+  type: commodity
+  country: EU
+  criticality: 0.85
+  resilience: 0.45
+  substitutes: []
+- id: com_machinery
+  label: "Machinery (Asia-Europe)"
+  type: commodity
+  country: EU
+  criticality: 0.68
+  resilience: 0.30
+  substitutes: [route_cape_good_hope]
+- id: ind_electronics_eu
+  label: "EU electronics manufacturing"
+  type: industry
+  country: EU
+  criticality: 0.70
+  resilience: 0.30
+  substitutes: []
+- id: ind_machinery_eu
+  label: "EU machinery manufacturing"
+  type: industry
+  country: EU
+  criticality: 0.65
+  resilience: 0.32
+  substitutes: []
+- id: mkt_eu_retail
+  label: "EU electronics retail"
+  type: market
+  country: EU
+  criticality: 0.62
+  resilience: 0.38
+  substitutes: []
+- id: mkt_seeurope_imports
+  label: "SE Europe import market"
+  type: market
+  country: GR
+  criticality: 0.50
+  resilience: 0.35
+  substitutes: []
+# ══════════════════════════════════════════════════════════════════════════
+# Corridor 3 — Black Sea grain: Odesa / Constanta / Bosphorus -> MENA food markets
+# ══════════════════════════════════════════════════════════════════════════
+- id: chokepoint_bosphorus
+  label: "Bosphorus / Turkish Straits"
+  type: route
+  country: TR
+  criticality: 0.78
+  resilience: 0.20
+  substitutes: []
+- id: port_odesa
+  label: "Port of Odesa"
+  type: port
+  country: UA
+  criticality: 0.88
+  resilience: 0.15
+  substitutes: []
+- id: port_constanta
+  label: "Port of Constanta"
+  type: port
+  country: RO
+  criticality: 0.70
+  resilience: 0.40
+  substitutes: []
+- id: route_black_sea
+  label: "Black Sea shipping lanes"
+  type: route
+  country: INT
+  criticality: 0.72
+  resilience: 0.25
+  substitutes: []
+- id: route_danube
+  label: "Danube export route"
+  type: route
+  country: UA
+  criticality: 0.45
+  resilience: 0.35
+  substitutes: []
+- id: route_solidarity_lanes
+  label: "EU Solidarity Lanes"
+  type: route
+  country: EU
+  criticality: 0.50
+  resilience: 0.40
+  substitutes: []
+- id: com_grain
+  label: "Black Sea grain exports"
+  type: commodity
+  country: INT
+  criticality: 0.85
+  resilience: 0.35
+  substitutes: []
+- id: ind_agri_ua
+  label: "Ukrainian grain producers"
+  type: industry
+  country: UA
+  criticality: 0.55
+  resilience: 0.25
+  substitutes: []
+- id: ind_milling_tr
+  label: "Turkish flour milling"
+  type: industry
+  country: TR
+  criticality: 0.60
+  resilience: 0.35
+  substitutes: []
+- id: mkt_egypt_wheat
+  label: "Egypt wheat imports"
+  type: market
+  country: EG
+  criticality: 0.72
+  resilience: 0.30
+  substitutes: []
+- id: mkt_mena_food
+  label: "MENA food imports"
+  type: market
+  country: MENA
+  criticality: 0.70
+  resilience: 0.30
+  substitutes: []
+- id: mkt_global_food
+  label: "Global food prices"
+  type: market
+  country: INT
+  criticality: 0.65
+  resilience: 0.40
+  substitutes: []

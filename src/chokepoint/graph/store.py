@@ -27,6 +27,37 @@ class NetworkXGraphStore:
     def neighbors(self, node_id: str) -> list[str]:
         return list(self._graph.successors(node_id))
 
+    def to_cytoscape_elements(self) -> dict[str, list[dict[str, Any]]]:
+        """The whole graph as Cytoscape.js ``elements``.
+
+        ``{"nodes": [{"data": {"id": ..., <attrs>}}], "edges": [{"data": {"id": ...,
+        "source": ..., "target": ..., <attrs>}}]}`` — every value is a plain JSON type, and
+        each dict is a fresh copy, so callers cannot mutate the store. ``substitutes`` (a
+        list of ids with no meaning to a renderer) is omitted from node data. Edge ids use
+        the ``<source>__<target>`` scheme that ``web/app.js`` already uses for the edges it
+        builds from simulate responses, so both renderers can address the same edge.
+        """
+        nodes = [
+            {
+                **{key: value for key, value in attributes.items() if key != "substitutes"},
+                "id": node_id,
+            }
+            for node_id, attributes in self._graph.nodes(data=True)
+        ]
+        edges = [
+            {
+                **attributes,
+                "id": f"{source}__{target}",
+                "source": source,
+                "target": target,
+            }
+            for source, target, attributes in self._graph.edges(data=True)
+        ]
+        return {
+            "nodes": [{"data": data} for data in nodes],
+            "edges": [{"data": data} for data in edges],
+        }
+
     def simulate(
         self,
         event: DisruptionEvent,

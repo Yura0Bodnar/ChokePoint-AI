@@ -208,3 +208,282 @@
   weight: 0.16
   lead_time_days: 12
   source_ref: "UN Comtrade 2023 EU-UA automotive components trade"
+
+# ══ Corridor 2 — Suez / Red Sea: Asia-Europe electronics and machinery ══
+- source: chokepoint_red_sea
+  target: chokepoint_suez
+  type: transits
+  weight: 0.90
+  lead_time_days: 1
+  source_ref: "IMF-2024: Red Sea attacks reduced Suez traffic (trade volume -50% y/y, Jan-Feb 2024); UNCTAD-2024: Suez transits -55% y/y by mid-Oct 2024. Weight modeled: Asia-Europe Suez traffic passes Bab el-Mandeb"
+- source: chokepoint_red_sea
+  target: com_electronics
+  type: transits
+  weight: 0.45
+  lead_time_days: 12
+  source_ref: "EUROSTAT-CN + EUROSTAT-MODE-2023: electrical equipment is a top-2 EU import group from China; sea = 51.0% of 2023 extra-EU import value. Weight modeled (sea x Asia x Suez share)"
+- source: chokepoint_red_sea
+  target: com_semiconductors
+  type: transits
+  weight: 0.25
+  lead_time_days: 14
+  source_ref: "EUROSTAT-MODE-2023: air = 17.4% of 2023 import value but 0.2% of tonnage (high unit value), so chips skew to air. Weight modeled, deliberately low"
+- source: chokepoint_red_sea
+  target: com_machinery
+  type: transits
+  weight: 0.55
+  lead_time_days: 12
+  source_ref: "EUROSTAT-CN: machinery and mechanical parts is a top-2 EU import group from China; EUROSTAT-MODE-2023: sea = 74.0% of import tonnage. Weight modeled"
+- source: chokepoint_red_sea
+  target: com_containers
+  type: transits
+  weight: 0.50
+  lead_time_days: 10
+  source_ref: "UNCTAD-2024: rerouting away from the Red Sea and Panama Canal raised container-ship demand 12% by mid-2024. Weight modeled"
+- source: chokepoint_red_sea
+  target: port_piraeus
+  type: transits
+  weight: 0.60
+  lead_time_days: 4
+  source_ref: "COSCO-2023: Piraeus Container Terminal handled 4,586.5k TEU in 2023. Weight modeled (Asia-Europe services calling Piraeus route via Suez)"
+- source: chokepoint_suez
+  target: com_electronics
+  type: transits
+  weight: 0.45
+  lead_time_days: 12
+  source_ref: "IMF-2024: Suez carries about 15% of global maritime trade; EUROSTAT-CN + EUROSTAT-MODE-2023 as for the Red Sea edge. Weight modeled"
+- source: chokepoint_suez
+  target: com_semiconductors
+  type: transits
+  weight: 0.25
+  lead_time_days: 14
+  source_ref: "EUROSTAT-MODE-2023: air = 17.4% of 2023 import value but 0.2% of tonnage (high unit value). Weight modeled, deliberately low"
+- source: chokepoint_suez
+  target: com_machinery
+  type: transits
+  weight: 0.55
+  lead_time_days: 12
+  source_ref: "EUROSTAT-CN + EUROSTAT-MODE-2023: machinery is a top-2 import group and sea carries 74.0% of import tonnage. Weight modeled"
+- source: chokepoint_suez
+  target: com_containers
+  type: transits
+  weight: 0.50
+  lead_time_days: 10
+  source_ref: "UNCTAD-2024: container-ship demand +12% from Red Sea and Panama rerouting; IMF-2024: Cape rerouting added 10+ days to delivery. Weight modeled"
+- source: chokepoint_suez
+  target: port_piraeus
+  type: transits
+  weight: 0.60
+  lead_time_days: 3
+  source_ref: "COSCO-2023: Piraeus Container Terminal handled 4,586.5k TEU in 2023. Weight modeled (Asia-Europe services calling Piraeus route via Suez)"
+- source: route_cape_good_hope
+  target: com_electronics
+  type: transits
+  weight: 0.35
+  lead_time_days: 24
+  source_ref: "IMF-2024: Cape volume +74% (Jan-Feb 2024), delivery +10 days; UNCTAD-2024: Cape rerouting capacity +89%. Weight modeled (alternative-route share)"
+- source: route_cape_good_hope
+  target: com_machinery
+  type: transits
+  weight: 0.35
+  lead_time_days: 24
+  source_ref: "IMF-2024 + UNCTAD-2024: as for the electronics edge. Weight modeled"
+- source: port_piraeus
+  target: mkt_seeurope_imports
+  type: supplies
+  weight: 0.55
+  lead_time_days: 4
+  source_ref: "SASAC-2024: Piraeus is the largest port in Greece. Weight modeled"
+- source: port_piraeus
+  target: route_land_sea_express
+  type: transits
+  weight: 0.85
+  lead_time_days: 1
+  source_ref: "SASAC-2024: Land-Sea Express uses Piraeus as its key node (30+ trains a week, 180,000+ TEU in 2022; operator-reported). Weight modeled"
+- source: route_land_sea_express
+  target: ind_logistics_cee
+  type: supplies
+  weight: 0.15
+  lead_time_days: 5
+  source_ref: "SASAC-2024 vs COSCO-2023: the line carried 180,000 TEU in 2022 against 4,352.1k TEU at Piraeus Container Terminal (~4%), a niche channel. Weight modeled, marginal band"
+- source: route_land_sea_express
+  target: mkt_cee_retail
+  type: supplies
+  weight: 0.12
+  lead_time_days: 8
+  source_ref: "SASAC-2024: containers move by rail from Piraeus to Prague and other inland stations (niche channel, see the logistics edge). Weight modeled, marginal band"
+- source: com_electronics
+  target: ind_electronics_eu
+  type: supplies
+  weight: 0.60
+  lead_time_days: 6
+  source_ref: "EUROSTAT-CN: electrical equipment is a top-2 EU import group from China. Weight modeled (structural link, no dataset)"
+- source: com_electronics
+  target: mkt_eu_retail
+  type: supplies
+  weight: 0.70
+  lead_time_days: 8
+  source_ref: "EUROSTAT-CN: electrical equipment is a top-2 EU import group from China. Weight modeled (structural link, no dataset)"
+- source: com_semiconductors
+  target: ind_electronics_eu
+  type: supplies
+  weight: 0.55
+  lead_time_days: 8
+  source_ref: "EC-CHIPS: the chip shortage disrupted supply chains. Weight modeled (structural link, no dataset)"
+- source: com_semiconductors
+  target: ind_auto_parts_de
+  type: supplies
+  weight: 0.35
+  lead_time_days: 10
+  source_ref: "EC-CHIPS: the chip shortage caused product shortages ranging from cars to medical devices. Weight modeled"
+- source: com_machinery
+  target: ind_machinery_eu
+  type: supplies
+  weight: 0.60
+  lead_time_days: 6
+  source_ref: "EUROSTAT-CN: machinery and mechanical parts is a top-2 EU import group from China. Weight modeled (structural link, no dataset)"
+- source: ind_electronics_eu
+  target: mkt_eu_retail
+  type: supplies
+  weight: 0.45
+  lead_time_days: 8
+  source_ref: "Structural link. Weight modeled (analyst estimate, no dataset)"
+- source: ind_electronics_eu
+  target: mkt_germany
+  type: supplies
+  weight: 0.30
+  lead_time_days: 8
+  source_ref: "Structural link. Weight modeled (analyst estimate, no dataset)"
+- source: ind_machinery_eu
+  target: mkt_germany
+  type: supplies
+  weight: 0.40
+  lead_time_days: 8
+  source_ref: "Structural link. Weight modeled (analyst estimate, no dataset)"
+- source: ind_machinery_eu
+  target: mkt_poland
+  type: supplies
+  weight: 0.30
+  lead_time_days: 9
+  source_ref: "Structural link. Weight modeled (analyst estimate, no dataset)"
+- source: ind_machinery_eu
+  target: mkt_czechia
+  type: supplies
+  weight: 0.28
+  lead_time_days: 9
+  source_ref: "Structural link. Weight modeled (analyst estimate, no dataset)"
+- source: mkt_eu_retail
+  target: mkt_cee_retail
+  type: supplies
+  weight: 0.35
+  lead_time_days: 6
+  source_ref: "Structural link. Weight modeled (analyst estimate, no dataset)"
+# ══ Corridor 3 — Black Sea grain: Odesa / Constanta / Bosphorus to MENA food markets ══
+- source: route_black_sea
+  target: chokepoint_bosphorus
+  type: transits
+  weight: 0.80
+  lead_time_days: 2
+  source_ref: "MONTREUX-1936: passage through the Turkish Straits is governed by the 1936 Convention; they are the Black Sea's only sea outlet (geography). Weight modeled"
+- source: route_black_sea
+  target: com_grain
+  type: transits
+  weight: 0.85
+  lead_time_days: 2
+  source_ref: "USDA-2023: 96% of Ukrainian grain and oilseed exports were seaborne in 2021. Weight modeled (all seaborne Black Sea exports)"
+- source: route_black_sea
+  target: port_odesa
+  type: transits
+  weight: 0.85
+  lead_time_days: 1
+  source_ref: "USDA-2023: Russia blocked all Ukrainian deep-sea ports from Mar to Jul 2022. Weight modeled"
+- source: route_black_sea
+  target: port_constanta
+  type: transits
+  weight: 0.60
+  lead_time_days: 1
+  source_ref: "USDA-2023: Constanza (Romania) was part of the diverted export route via the Danube. Weight modeled"
+- source: chokepoint_bosphorus
+  target: com_grain
+  type: transits
+  weight: 0.85
+  lead_time_days: 4
+  source_ref: "UN-JCC: Black Sea Grain Initiative vessels proceeded towards Istanbul along the humanitarian corridor; MONTREUX-1936 (geography). Weight modeled (excludes intra-Black-Sea destinations)"
+- source: port_odesa
+  target: com_grain
+  type: handles
+  weight: 0.40
+  lead_time_days: 3
+  source_ref: "FAO-2023: Russia 15% + Ukraine 10% of 2021 world wheat exports (Ukraine = 10/25 = 40% of the pair); USDA-2023: 96% of Ukrainian exports seaborne. Weight derived, rounded"
+- source: port_constanta
+  target: com_grain
+  type: handles
+  weight: 0.20
+  lead_time_days: 3
+  source_ref: "USDA-2023 + EC-SOLIDARITY-2024: alternative routes via Constanza handled only a fraction of exports; the EC group facilitated Constanta traffic management. Weight modeled"
+- source: route_danube
+  target: port_constanta
+  type: transits
+  weight: 0.50
+  lead_time_days: 2
+  source_ref: "USDA-2023: diverted flow moved via Izmail and Reni (Ukraine) and Constanza (Romania). Weight modeled"
+- source: route_danube
+  target: com_grain
+  type: transits
+  weight: 0.15
+  lead_time_days: 5
+  source_ref: "USDA-2023: Danube ports carried only a fraction of exports seeking routes. Weight modeled, low"
+- source: route_solidarity_lanes
+  target: com_grain
+  type: transits
+  weight: 0.30
+  lead_time_days: 7
+  source_ref: "USDA-2023: the seaborne share fell from >96% (2021) to ~69% (2022), so ~31% moved by other routes. Weight derived"
+- source: port_odesa
+  target: ind_agri_ua
+  type: depends_on
+  weight: 0.70
+  lead_time_days: 7
+  source_ref: "USDA-2023: 96% of Ukrainian grain exports seaborne (2021); transport costs more than doubled in 2022. Weight modeled"
+- source: port_constanta
+  target: ind_agri_ua
+  type: depends_on
+  weight: 0.20
+  lead_time_days: 7
+  source_ref: "USDA-2023 + EC-SOLIDARITY-2024: Constanta is part of the alternative export corridor. Weight modeled"
+- source: com_grain
+  target: mkt_egypt_wheat
+  type: supplies
+  weight: 0.72
+  lead_time_days: 12
+  source_ref: "FAO-2023 figs 26-27: Egypt sourced 78% (2021) and 66% (2022) of wheat imports from Russia and Ukraine. Weight derived = mean 0.72"
+- source: com_grain
+  target: ind_milling_tr
+  type: supplies
+  weight: 0.91
+  lead_time_days: 10
+  source_ref: "FAO-2023 figs 26-27: Turkiye sourced 88% (2021) and 94% (2022) of wheat imports from Russia and Ukraine. Weight derived = mean 0.91"
+- source: com_grain
+  target: mkt_mena_food
+  type: supplies
+  weight: 0.60
+  lead_time_days: 14
+  source_ref: "FAO-2023 fig 15: many North Africa and Western/Central Asia countries imported the majority of their 2021 wheat from Russia and Ukraine. Weight modeled (>0.5)"
+- source: com_grain
+  target: mkt_global_food
+  type: supplies
+  weight: 0.40
+  lead_time_days: 14
+  source_ref: "FAO-2023: Russia and Ukraine about 26% of 2021 world wheat exports; FAO Food Price Index fell 22% Mar 2022-May 2023, in part reflecting the Black Sea Grain Initiative and Solidarity Lanes. Weight modeled"
+- source: ind_milling_tr
+  target: mkt_mena_food
+  type: supplies
+  weight: 0.35
+  lead_time_days: 12
+  source_ref: "FAO-2023: Turkiye exports wheat flour to Yemen, Somalia, Iraq and others. Weight modeled"
+- source: mkt_egypt_wheat
+  target: mkt_mena_food
+  type: supplies
+  weight: 0.35
+  lead_time_days: 7
+  source_ref: "FAO-2023: Egypt imported over 11 million tonnes of wheat in 2021. Weight modeled"

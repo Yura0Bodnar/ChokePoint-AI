@@ -8,16 +8,23 @@ move the real `LLMProvider` Protocol into `agent/providers/base.py` and add
 `graph/store.py` against the same method shapes used here. This file's
 factory functions (`get_llm_provider`, `get_graph_store`) are then updated,
 in their own PRs, to select the real implementation once `settings.llm_provider`
-/ `settings.graph_backend` says so. Until then, everything below is the stub.
+/ `settings.graph_backend` says so. `get_graph_store` now returns the real
+`NetworkXGraphStore` (the stub survives as the `DEMO_MODE=true` fallback);
+`get_llm_provider` is still the stub until Person 2's agent is wired in.
 """
 
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import ClassVar, Protocol
 
 from chokepoint.config import get_settings
 from chokepoint.contracts import DisruptionEvent, EventType, ExtractedLocation, ImpactedNode
+from chokepoint.graph.store import NetworkXGraphStore
+
+#: The curated YAML graph (nodes.yaml / edges.yaml / SOURCES.md) shipped inside the package.
+_SEED_DIR = Path(__file__).resolve().parents[1] / "graph" / "seed"
 
 
 class LLMProvider(Protocol):
@@ -139,10 +146,17 @@ def get_llm_provider() -> LLMProvider:
 
 @lru_cache
 def get_graph_store() -> GraphStore:
-    # Always the stub today. Person 1's real store will read
-    # `settings.graph_backend` to choose between networkx/kuzu — see the same
-    # Settings-as-a-dependency note on `get_llm_provider` above.
-    return StubGraphStore()
+    settings = get_settings()
+    if settings.demo_mode:
+        # Offline-venue safety net (ARCHITECTURE_AND_PLAN.md §16.1): the canned 3-hop cascade.
+        return StubGraphStore()
+    if settings.graph_backend != "networkx":
+        # `kuzu` is documented in .env.example but not implemented; failing loudly beats
+        # silently serving a different backend than the one that was asked for.
+        raise ValueError(
+            f"unsupported GRAPH_BACKEND={settings.graph_backend!r}; only 'networkx' is implemented"
+        )
+    return NetworkXGraphStore.from_seed_dir(_SEED_DIR)
 
 
 __all__ = [
