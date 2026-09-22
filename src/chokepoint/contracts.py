@@ -116,3 +116,10 @@ class SimulateRequest(BaseModel):
     severity_override: int | None = Field(default=None, ge=1, le=5)
     max_hops: int = Field(default=4, ge=1, le=8)
     decay: float = Field(default=0.75, ge=0.1, le=1.0)
+    force_local: bool = Field(
+        default=False,
+        description=(
+            "Consent to run the slow local CPU model (~40 s) after Hugging Face failed. "
+            "Without it, an HF outage returns HTTP 424 instead of silently going local."
+        ),
+    )

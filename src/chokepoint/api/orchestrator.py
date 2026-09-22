@@ -22,10 +22,10 @@ def run_simulation(
     if request.event is not None:
         event = request.event
     elif request.text is not None:
-        event = llm.extract(request.text)
+        event = llm.extract_text(request.text, force_local=request.force_local)
     elif request.doc_id is not None:
-        # Day-1 slice has no document store wired in yet (that lands with
-        # Person 1's ingestion PR). Fail loudly and clearly rather than guess.
+        # Looking a document up by id needs a document store, which is not wired in.
+        # Fail loudly and clearly rather than guess.
         raise ValueError(f"doc_id lookup is not implemented in this slice: {request.doc_id!r}")
     else:
         raise ValueError("SimulateRequest must supply exactly one of: text, doc_id, event")

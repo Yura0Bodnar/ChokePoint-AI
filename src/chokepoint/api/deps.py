@@ -1,16 +1,10 @@
 """Dependency-injection seams for the API layer.
 
-The `LLMProvider` and `GraphStore` Protocols, and their Stub implementations,
-are defined locally in this file as an intentional simplification for the
-Day-1 vertical slice (see PROMPT_P3_BACKEND_DEVOPS.md Step 3). Person 2 will
-move the real `LLMProvider` Protocol into `agent/providers/base.py` and add
-`HFInferenceProvider`; Person 1 will implement `NetworkXGraphStore` in
-`graph/store.py` against the same method shapes used here. This file's
-factory functions (`get_llm_provider`, `get_graph_store`) are then updated,
-in their own PRs, to select the real implementation once `settings.llm_provider`
-/ `settings.graph_backend` says so. `get_graph_store` now returns the real
-`NetworkXGraphStore` (the stub survives as the `DEMO_MODE=true` fallback);
-`get_llm_provider` is still the stub until Person 2's agent is wired in.
+`LLMProvider` and `GraphStore` are the two Protocols the orchestrator depends on, so the
+API never imports a concrete implementation. `get_llm_provider` builds the real
+`ExtractionAgent` from `settings.llm_provider` (hf | local | stub) via
+`build_extraction_agent`; `get_graph_store` returns the NetworkX graph engine, or the
+canned `StubGraphStore` cascade when `DEMO_MODE=true`.
 """
 
 from __future__ import annotations
@@ -19,8 +13,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import ClassVar, Protocol
 
+from chokepoint.agent.providers.factory import build_extraction_agent
 from chokepoint.config import get_settings
-from chokepoint.contracts import DisruptionEvent, EventType, ExtractedLocation, ImpactedNode
+from chokepoint.contracts import DisruptionEvent, ImpactedNode
 from chokepoint.graph.store import NetworkXGraphStore
 
 #: The curated YAML graph (nodes.yaml / edges.yaml / SOURCES.md) shipped inside the package.
@@ -28,9 +23,10 @@ _SEED_DIR = Path(__file__).resolve().parents[1] / "graph" / "seed"
 
 
 class LLMProvider(Protocol):
-    name: str
+    @property
+    def name(self) -> str: ...
 
-    def extract(self, text: str) -> DisruptionEvent: ...
+    def extract_text(self, text: str, *, force_local: bool = False) -> DisruptionEvent: ...
 
 
 class GraphStore(Protocol):
@@ -39,37 +35,16 @@ class GraphStore(Protocol):
     ) -> list[ImpactedNode]: ...
 
 
-# ─── Shared placeholder node-id vocabulary ─────────────────────────────────
-# These exact ids are used identically across all three foundation branches
-# until Person 1's real graph seed lands. Do not invent alternate spellings.
+# ─── StubGraphStore vocabulary ─────────────────────────────────────────────
+# The DEMO_MODE cascade below uses these node ids from the seed graph:
 #   port_hamburg            — Port of Hamburg
 #   com_auto_parts          — Automotive components (commodity)
 #   ind_auto_parts_pl       — Polish automotive components industry
 #   mkt_ukraine_aftermarket — Ukrainian automotive aftermarket
 
 
-class StubLLMProvider:
-    """Always returns the same canned event. No network, no cost, deterministic."""
-
-    name = "stub"
-
-    def extract(self, text: str) -> DisruptionEvent:
-        return DisruptionEvent(
-            event_type=EventType.STRIKE,
-            locations=[
-                ExtractedLocation(raw="Hamburg Port", node_id="port_hamburg", country_iso2="DE")
-            ],
-            affected_goods=["electronics", "auto parts"],
-            severity=3,
-            estimated_duration_days=7,
-            confidence=0.5,
-            summary="Stub extraction: dockworker strike at Hamburg Port (no LLM called).",
-            extractor_version="stub-v0",
-        )
-
-
 class StubGraphStore:
-    """Hardcoded 3-hop cascade so /simulate is demoable before the real graph exists."""
+    """Hardcoded 3-hop cascade: the offline `DEMO_MODE=true` fallback (no real graph needed)."""
 
     name = "stub"
 
@@ -124,7 +99,7 @@ class StubGraphStore:
                     path=path,
                     explanation=(
                         f"Mock propagation via {' → '.join(path)} "
-                        "(StubGraphStore — no real graph loaded yet)."
+                        "(StubGraphStore — canned DEMO_MODE cascade)."
                     ),
                 )
             )
@@ -133,15 +108,7 @@ class StubGraphStore:
 
 @lru_cache
 def get_llm_provider() -> LLMProvider:
-    # Always the stub today. Person 2's real provider will read
-    # `settings.llm_provider` to choose between hf/local/stub — take that as
-    # `Annotated[Settings, Depends(get_settings)]` rather than a bare default
-    # (FastAPI otherwise infers a bare `Settings` parameter here as an extra
-    # JSON body field on every route that depends on this function). Note
-    # too that `Settings` instances are not hashable, so this function can no
-    # longer stay `@lru_cache`'d once it takes one — cache on a hashable
-    # derived key (e.g. `settings.llm_provider`) instead.
-    return StubLLMProvider()
+    return build_extraction_agent(get_settings())
 
 
 @lru_cache
@@ -163,7 +130,6 @@ __all__ = [
     "GraphStore",
     "LLMProvider",
     "StubGraphStore",
-    "StubLLMProvider",
     "get_graph_store",
     "get_llm_provider",
     "get_settings",

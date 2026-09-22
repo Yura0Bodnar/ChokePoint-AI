@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     llm_failover_to_local: bool = True  # hf → local on 402 / network failure
     local_model: str = "Qwen/Qwen2.5-1.5B-Instruct"  # P2.8 CPU fallback
     local_device: str = "cpu"
-    graph_backend: str = "networkx"  # networkx | kuzu — real values arrive with P1's PR
+    graph_backend: str = "networkx"  # only "networkx" is implemented
 
     sim_max_hops: int = 4
     sim_decay: float = 0.75
