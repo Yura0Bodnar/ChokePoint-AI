@@ -1,1 +1,362 @@
-[]
+[
+  {
+    "id": "rotterdam-lashers-strike",
+    "title": "Lashers at Port of Rotterdam begin 24-hour strike over pay",
+    "body": "Contract lashers who secure containers on deep-sea vessels stopped work at the Port of Rotterdam on Tuesday, leaving several terminals unable to load or discharge ships. The union said the action would last 24 hours and could be extended, while shipping lines warned that container arrivals for German and Dutch manufacturers could slip by two to three days.",
+    "expected": {
+      "event_type": "strike",
+      "locations": [
+        {
+          "raw": "Port of Rotterdam",
+          "node_id": "port_rotterdam"
+        }
+      ],
+      "affected_goods": [],
+      "severity": 3
+    }
+  },
+  {
+    "id": "antwerp-national-strike",
+    "title": "Belgian national strike shuts Antwerp-Bruges as pilots and tug crews join",
+    "body": "A nationwide general strike brought operations at the Port of Antwerp-Bruges to a near standstill on Monday after pilots, tug crews and lock operators joined the walkout. Chemicals and steel shipments were among the cargo held at anchor, and the port authority said normal service would not resume before Wednesday.",
+    "expected": {
+      "event_type": "strike",
+      "locations": [
+        {
+          "raw": "Port of Antwerp-Bruges",
+          "node_id": "port_antwerp"
+        }
+      ],
+      "affected_goods": [
+        "chemicals",
+        "steel"
+      ],
+      "severity": 4
+    }
+  },
+  {
+    "id": "piraeus-dockers-stoppage",
+    "title": "Piraeus dockers stage 12-hour work stoppage at container terminal",
+    "body": "Dockworkers at Piraeus walked off the job for 12 hours on Thursday to protest a new shift schedule, delaying the loading of two Asia-Europe services. The terminal operator said it expected to clear the backlog over the weekend and that there was no lasting impact on cargo flows.",
+    "expected": {
+      "event_type": "strike",
+      "locations": [
+        {
+          "raw": "Piraeus",
+          "node_id": "port_piraeus"
+        }
+      ],
+      "affected_goods": [],
+      "severity": 2
+    }
+  },
+  {
+    "id": "valencia-stevedores-strike",
+    "title": "Valencia stevedores strike over automation plans, disrupting car exports",
+    "body": "Stevedores at the Spanish port of Valencia began a 48-hour strike on Monday against plans to automate a container terminal. Vehicle exports and automotive parts imports were the worst affected, with several roll-on/roll-off vessels diverted to nearby ports.",
+    "expected": {
+      "event_type": "strike",
+      "locations": [
+        {
+          "raw": "Valencia",
+          "node_id": null
+        }
+      ],
+      "affected_goods": [
+        "automotive parts"
+      ],
+      "severity": 3
+    }
+  },
+  {
+    "id": "koper-truckers-blockade",
+    "title": "Truckers blockade entrance to Port of Koper in protest over road tolls",
+    "body": "Hundreds of Slovenian truck drivers parked their vehicles across the access roads to the Port of Koper on Wednesday, preventing containers from entering or leaving the terminal. Police said negotiations with the transport ministry were under way, but the port warned that road dispatches would stay suspended until the blockade is lifted.",
+    "expected": {
+      "event_type": "blockade",
+      "locations": [
+        {
+          "raw": "Port of Koper",
+          "node_id": "port_koper"
+        }
+      ],
+      "affected_goods": [],
+      "severity": 3
+    }
+  },
+  {
+    "id": "bosphorus-tanker-sanctions",
+    "title": "New sanctions on Russian tanker fleet leave Turkish Straits transits in limbo",
+    "body": "Western governments added 40 more tankers to their sanctions lists this week, prompting insurers to question cover for vessels passing through the Bosphorus. Crude oil cargoes bound for Mediterranean refiners face additional paperwork and possible delays, traders said.",
+    "expected": {
+      "event_type": "sanctions",
+      "locations": [
+        {
+          "raw": "Bosphorus",
+          "node_id": "chokepoint_bosphorus"
+        }
+      ],
+      "affected_goods": [
+        "crude oil"
+      ],
+      "severity": 3
+    }
+  },
+  {
+    "id": "suez-container-ship-grounding",
+    "title": "Container ship runs aground in Suez Canal, blocking both directions",
+    "body": "A 400-metre container vessel lost steering in a sandstorm and ran aground across the Suez Canal on Sunday, halting northbound and southbound traffic. Tankers carrying crude oil and LNG are queuing at both ends, and canal authorities said refloating could take several days.",
+    "expected": {
+      "event_type": "accident",
+      "locations": [
+        {
+          "raw": "Suez Canal",
+          "node_id": "chokepoint_suez"
+        }
+      ],
+      "affected_goods": [
+        "crude oil",
+        "lng"
+      ],
+      "severity": 5
+    }
+  },
+  {
+    "id": "malacca-vessel-collision",
+    "title": "Two vessels collide in Strait of Malacca, one lane closed for salvage",
+    "body": "A bulk carrier and a product tanker collided in the Strait of Malacca on Saturday night, and traffic authorities closed the eastbound lane while salvage crews contain a fuel leak. Ships are being held at anchorage but the westbound lane remains open.",
+    "expected": {
+      "event_type": "accident",
+      "locations": [
+        {
+          "raw": "Strait of Malacca",
+          "node_id": "chokepoint_malacca"
+        }
+      ],
+      "affected_goods": [],
+      "severity": 3
+    }
+  },
+  {
+    "id": "odesa-grain-terminal-drone-attack",
+    "title": "Drone strike damages grain terminal at Odesa port",
+    "body": "Overnight drone attacks hit storage and loading facilities at the Port of Odesa, damaging a grain terminal and forcing the suspension of wheat and corn loadings. Officials said repairs would take at least a week and that vessels already in port were moved to safer berths.",
+    "expected": {
+      "event_type": "conflict",
+      "locations": [
+        {
+          "raw": "Port of Odesa",
+          "node_id": "port_odesa"
+        }
+      ],
+      "affected_goods": [
+        "wheat",
+        "corn"
+      ],
+      "severity": 4
+    }
+  },
+  {
+    "id": "hormuz-tanker-seizure",
+    "title": "Naval standoff in Strait of Hormuz after tanker seizure sends freight rates higher",
+    "body": "Iranian forces seized a crude oil tanker in the Strait of Hormuz on Friday, prompting warships from several countries to shadow commercial traffic. Insurers raised war-risk premiums and some LNG carriers paused transits while governments sought the crew's release.",
+    "expected": {
+      "event_type": "conflict",
+      "locations": [
+        {
+          "raw": "Strait of Hormuz",
+          "node_id": "chokepoint_hormuz"
+        }
+      ],
+      "affected_goods": [
+        "crude oil",
+        "lng"
+      ],
+      "severity": 4
+    }
+  },
+  {
+    "id": "panama-canal-drought-transit-cap",
+    "title": "Drought forces Panama Canal to cut daily transits again",
+    "body": "Low water levels in Gatun Lake led the Panama Canal Authority to cap daily transits and reduce maximum draft for the third month running. LNG carriers and grain bulkers are among the vessels re-routing or waiting, and operators expect the restrictions to last through the dry season.",
+    "expected": {
+      "event_type": "natural_disaster",
+      "locations": [
+        {
+          "raw": "Panama Canal",
+          "node_id": "chokepoint_panama"
+        }
+      ],
+      "affected_goods": [
+        "lng",
+        "grain"
+      ],
+      "severity": 4
+    }
+  },
+  {
+    "id": "taiwan-earthquake-chip-fabs",
+    "title": "Strong earthquake in Taiwan halts production lines at chip plants",
+    "body": "A magnitude 7.2 earthquake struck eastern Taiwan on Wednesday, and several semiconductor fabs evacuated staff and paused wafer production while they inspected equipment. Analysts said a short outage should be absorbed by inventories, but a longer stoppage would hit automotive and electronics supply chains.",
+    "expected": {
+      "event_type": "natural_disaster",
+      "locations": [
+        {
+          "raw": "Taiwan",
+          "node_id": null
+        }
+      ],
+      "affected_goods": [
+        "semiconductors"
+      ],
+      "severity": 3
+    }
+  },
+  {
+    "id": "north-sea-storm-three-ports",
+    "title": "Severe North Sea storm halts operations at Hamburg, Rotterdam and Antwerp",
+    "body": "Gale-force winds and heavy swell forced pilots to suspend vessel movements at Hamburg, Rotterdam and Antwerp on Thursday, and crane operations were stopped at several terminals. The ports expect to resume normal working within 24 hours as the storm moves east.",
+    "expected": {
+      "event_type": "natural_disaster",
+      "locations": [
+        {
+          "raw": "Hamburg",
+          "node_id": "port_hamburg"
+        },
+        {
+          "raw": "Rotterdam",
+          "node_id": "port_rotterdam"
+        },
+        {
+          "raw": "Antwerp",
+          "node_id": "port_antwerp"
+        }
+      ],
+      "affected_goods": [],
+      "severity": 2
+    }
+  },
+  {
+    "id": "hamburg-terminal-ransomware",
+    "title": "Ransomware attack knocks out booking system at Hamburg terminal operator",
+    "body": "A Hamburg container terminal operator said a ransomware attack had disabled its booking and gate-management systems, forcing staff to process trucks manually. Truck queues built up outside the facility on Monday and the company said it could not yet say when systems would be restored.",
+    "expected": {
+      "event_type": "cyberattack",
+      "locations": [
+        {
+          "raw": "Hamburg",
+          "node_id": "port_hamburg"
+        }
+      ],
+      "affected_goods": [],
+      "severity": 3
+    }
+  },
+  {
+    "id": "rotterdam-yard-congestion",
+    "title": "Yard congestion at Rotterdam pushes container dwell times above ten days",
+    "body": "Yard utilisation at several Rotterdam terminals topped 95% this week as a surge of Asia imports collided with limited barge and rail capacity. Retailers importing consumer electronics warned that dwell times of more than ten days were disrupting restocking ahead of the peak season.",
+    "expected": {
+      "event_type": "congestion",
+      "locations": [
+        {
+          "raw": "Rotterdam",
+          "node_id": "port_rotterdam"
+        }
+      ],
+      "affected_goods": [
+        "consumer electronics"
+      ],
+      "severity": 2
+    }
+  },
+  {
+    "id": "constanta-grain-truck-queues",
+    "title": "Grain truck queues stretch for 20 kilometres outside Constanta",
+    "body": "Trucks carrying Ukrainian wheat and maize waited up to five days to enter Constanta port after a surge in export volumes overwhelmed the terminal gates. Traders said the delays were raising storage costs but that vessel loadings themselves had not been interrupted.",
+    "expected": {
+      "event_type": "congestion",
+      "locations": [
+        {
+          "raw": "Constanta",
+          "node_id": "port_constanta"
+        }
+      ],
+      "affected_goods": [
+        "wheat",
+        "maize"
+      ],
+      "severity": 3
+    }
+  },
+  {
+    "id": "india-wheat-export-ban",
+    "title": "India bans wheat exports to curb domestic prices",
+    "body": "The Indian government imposed an immediate ban on wheat exports on Saturday, citing heatwave damage to crops and rising food inflation. Grain traders in Black Sea and Middle East markets said the move would tighten global supply and lift prices.",
+    "expected": {
+      "event_type": "export_ban",
+      "locations": [
+        {
+          "raw": "India",
+          "node_id": null
+        }
+      ],
+      "affected_goods": [
+        "wheat"
+      ],
+      "severity": 3
+    }
+  },
+  {
+    "id": "gdansk-terminal-power-failure",
+    "title": "Power failure halts cranes at Gdansk container terminal for 12 hours",
+    "body": "A grid failure cut electricity to the Gdansk deepwater container terminal on Sunday, leaving ship-to-shore cranes idle for 12 hours. The operator said power had been restored and that it would add extra shifts to clear the backlog of vessels.",
+    "expected": {
+      "event_type": "infrastructure_failure",
+      "locations": [
+        {
+          "raw": "Gdansk",
+          "node_id": "port_gdansk"
+        }
+      ],
+      "affected_goods": [],
+      "severity": 2
+    }
+  },
+  {
+    "id": "red-sea-war-risk-premiums",
+    "title": "War-risk insurance for Red Sea transits triples, shipowners weigh reroutes",
+    "body": "Marine insurers tripled war-risk premiums for vessels transiting the Red Sea this week, adding hundreds of thousands of dollars to each voyage. Shipowners said they were weighing whether to route around the Cape of Good Hope instead, though no line has yet cancelled a sailing.",
+    "expected": {
+      "event_type": "other",
+      "locations": [
+        {
+          "raw": "Red Sea",
+          "node_id": "chokepoint_red_sea"
+        }
+      ],
+      "affected_goods": [],
+      "severity": 2
+    }
+  },
+  {
+    "id": "asia-europe-peak-surcharge",
+    "title": "Carriers announce peak-season surcharges on Asia to Rotterdam and Hamburg routes",
+    "body": "Several container lines announced peak-season surcharges of up to $1,000 per container on Asia to North Europe services, effective from the first of next month. The increases apply to cargo bound for Rotterdam and Hamburg and follow a rise in spot rates.",
+    "expected": {
+      "event_type": "other",
+      "locations": [
+        {
+          "raw": "Rotterdam",
+          "node_id": "port_rotterdam"
+        },
+        {
+          "raw": "Hamburg",
+          "node_id": "port_hamburg"
+        }
+      ],
+      "affected_goods": [],
+      "severity": 1
+    }
+  }
+]

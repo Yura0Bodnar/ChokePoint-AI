@@ -5,8 +5,9 @@ Run manually:
     export HF_TOKEN=hf_xxx
     uv run pytest tests/live/test_hf_support_matrix.py -m live -s
 
-Prints one row per model x response_format mode; copy the table into
-docs/PROMPTS.md. Requires HF_HUB_OFFLINE to be unset.
+Prints one row per model, probed exactly as production calls it: prompt-only (no
+``response_format``), with the fenced-JSON v2 prompt and the fence-aware parser. Copy the
+table into docs/PROMPTS.md. Requires HF_HUB_OFFLINE to be unset.
 """
 
 from __future__ import annotations
@@ -26,10 +27,10 @@ from chokepoint.agent.providers.hf_inference import HFInferenceProvider
 pytestmark = pytest.mark.live
 
 DEFAULT_CANDIDATES = [
-    "Qwen/Qwen2.5-7B-Instruct",
+    "openai/gpt-oss-20b",
     "meta-llama/Llama-3.1-8B-Instruct",
-    "mistralai/Mistral-7B-Instruct-v0.3",
-    "Qwen/Qwen2.5-1.5B-Instruct",
+    "Qwen/Qwen2.5-7B-Instruct",
+    "mistralai/Mistral-Nemo-Instruct-2407",
 ]
 # Override with a comma-separated list, e.g. HF_MATRIX_MODELS="openai/gpt-oss-20b,Qwen/Qwen3-32B"
 CANDIDATES = [
@@ -43,17 +44,16 @@ BODY = (
 REPEATS = int(os.environ.get("HF_MATRIX_REPEATS", "3"))
 
 
-def _probe(model: str, mode: str) -> tuple[str, float | None, str]:
-    """Return (verdict, p50 latency seconds, note) for one model x mode."""
+def _probe(model: str) -> tuple[str, float | None, str]:
+    """Return (verdict, p50 latency seconds, note) for one model, prompt-only."""
     token = os.environ["HF_TOKEN"]
     provider = os.environ.get("HF_INFERENCE_PROVIDER", "auto")
     p = HFInferenceProvider(model=model, token=token, provider=provider)
-    p.supports_structured = mode == "json_schema"
     latencies: list[float] = []
     for _ in range(REPEATS):
         t0 = time.perf_counter()
         try:
-            raw = p._complete(build_messages(TITLE, BODY), mode)  # type: ignore[arg-type]
+            raw = p.chat(build_messages(TITLE, BODY))
         except HfHubHTTPError as exc:
             status = getattr(getattr(exc, "response", None), "status_code", "?")
             return ("✗", None, f"HTTP {status}: {str(exc)[:80]}")
@@ -72,15 +72,11 @@ def _probe(model: str, mode: str) -> tuple[str, float | None, str]:
 @pytest.mark.skipif("HF_TOKEN" not in os.environ, reason="needs a real HF_TOKEN")
 @pytest.mark.parametrize("model", CANDIDATES)
 def test_support_matrix_row(model: str) -> None:
-    rows = {}
-    for mode in ("json_schema", "json_object", "none"):
-        rows[mode] = _probe(model, mode)
+    verdict, latency, note = _probe(model)
     print(
-        f"\n| {model} | "
-        + " | ".join(
-            f"{v} ({lat:.2f}s) {note}" if lat else f"{v} {note}" for v, lat, note in rows.values()
-        )
-        + " |"
+        f"\n| {model} | {verdict} ({latency:.2f}s) {note} |"
+        if latency
+        else f"\n| {model} | {verdict} {note} |"
     )
-    print(json.dumps({model: rows}, default=str))
-    assert any(v == "✓" for v, _, _ in rows.values()), f"{model}: no mode produced a valid event"
+    print(json.dumps({model: [verdict, latency, note]}, default=str))
+    assert verdict == "✓", f"{model}: {note}"

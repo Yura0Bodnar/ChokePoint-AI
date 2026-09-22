@@ -27,7 +27,7 @@ def test_validation_reports_all_violations(tmp_path: Path) -> None:
     seed_dir = write_seed(
         tmp_path,
         "- id: A\n  criticality: 2\n  resilience: 0.2\n",
-        "- source: A\n  target: A\n  weight: -1\n" "- source: A\n  target: missing\n  weight: 2\n",
+        "- source: A\n  target: A\n  weight: -1\n- source: A\n  target: missing\n  weight: 2\n",
     )
     with pytest.raises(GraphValidationError) as error:
         load_seed_graph(seed_dir)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from chokepoint.agent.extractor import ExtractionAgent
+from chokepoint.agent.prompts import PROMPT_VERSION
 from chokepoint.agent.providers import factory
 from chokepoint.agent.providers.factory import build_provider
 from chokepoint.agent.providers.failover import FailoverProvider
@@ -22,7 +23,7 @@ def test_stub_default_and_end_to_end(alias_index: dict[str, str], hamburg_doc: R
     assert isinstance(provider, StubLLMProvider)
     event = ExtractionAgent(provider, alias_index).extract(hamburg_doc)
     assert event.locations[0].node_id == "port_hamburg"
-    assert event.extractor_version == "stub-v1"
+    assert event.extractor_version == f"stub-{PROMPT_VERSION}"
 
 
 def test_local() -> None:
@@ -70,3 +71,36 @@ def test_unknown_provider() -> None:
 
 def test_case_insensitive() -> None:
     assert isinstance(build_provider(_settings(llm_provider="STUB")), StubLLMProvider)
+
+
+# ── build_extraction_agent: the one call api/deps.py needs ─────────────────────
+def test_build_extraction_agent_stub_end_to_end() -> None:
+    agent = factory.build_extraction_agent(_settings(llm_provider="stub"))
+    assert isinstance(agent, ExtractionAgent)
+    assert agent.name == "stub"
+
+    event = agent.extract_text("A dockworker strike has halted operations at Hamburg Port.")
+    assert event.locations[0].node_id == "port_hamburg"  # real packaged aliases.yaml
+    assert event.extractor_version == f"stub-{PROMPT_VERSION}"
+
+
+def test_build_extraction_agent_honours_llm_max_retries(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Each attempt is a billed HF call, so LLM_MAX_RETRIES must actually cap the attempts.
+    provider = StubLLMProvider.from_strings(["not json at all"])
+    monkeypatch.setattr(factory, "build_provider", lambda settings: provider)
+
+    agent = factory.build_extraction_agent(_settings(llm_max_retries=2))
+    event = agent.extract_text("Dockworkers strike at Hamburg Port")
+
+    assert len(provider.calls) == 2
+    assert event.extractor_version.startswith("fallback")
+
+
+def test_build_extraction_agent_surfaces_provider_misconfiguration() -> None:
+    with pytest.raises(ValueError, match="HF_TOKEN"):
+        factory.build_extraction_agent(_settings(llm_provider="hf", hf_token=""))
+
+
+def test_build_extraction_agent_rejects_zero_attempts() -> None:
+    with pytest.raises(ValueError, match="max_attempts"):
+        factory.build_extraction_agent(_settings(llm_max_retries=0))

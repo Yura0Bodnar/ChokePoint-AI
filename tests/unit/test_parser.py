@@ -128,3 +128,55 @@ def test_truncated_output_raises() -> None:
 def test_no_json_at_all_raises_decode_error(raw: str) -> None:
     with pytest.raises(json.JSONDecodeError):
         parse_event(raw)
+
+
+# ── markdown code blocks: the regex path (the v2 prompt asks for exactly one ```json block) ──
+def test_extract_json_blob_returns_only_the_fenced_object() -> None:
+    assert extract_json_blob(f"```json\n{GOOD}\n```") == GOOD
+
+
+def test_fenced_block_after_prose_that_contains_braces() -> None:
+    # Old behaviour (first "{" .. last "}") would swallow the prose braces and corrupt the JSON.
+    _assert_good(
+        f"Here is the {{event}} you asked for:\n```json\n{GOOD}\n```\nHope {{this}} helps!"
+    )
+
+
+def test_inline_fence_on_one_line() -> None:
+    _assert_good(f"Result: ```json {GOOD}``` done.")
+
+
+def test_uppercase_language_tag() -> None:
+    _assert_good(f"```JSON\n{GOOD}\n```")
+
+
+def test_crlf_line_endings() -> None:
+    _assert_good(f"```json\r\n{GOOD}\r\n```\r\n")
+
+
+def test_fence_with_another_language_tag_still_yields_the_object() -> None:
+    _assert_good(f"```javascript\n{GOOD}\n```")
+
+
+def test_json_tagged_block_beats_an_earlier_untagged_block() -> None:
+    _assert_good(f"```\n{{not: 'the answer'}}\n```\n```json\n{GOOD}\n```")
+
+
+def test_first_json_block_wins_when_the_model_emits_two() -> None:
+    other = GOOD.replace("Port of Hamburg", "Port of Rotterdam")
+    _assert_good(f"```json\n{GOOD}\n```\n```json\n{other}\n```")
+
+
+def test_unclosed_fence_from_truncated_output_still_parses() -> None:
+    _assert_good(f"```json\n{GOOD}")
+
+
+def test_braces_inside_string_values_survive_a_fenced_block() -> None:
+    raw = GOOD.replace("Dockworker strike", "Dockworker {ver.di} strike")
+    event = parse_event(f"```json\n{raw}\n```")
+    assert event.summary == "Dockworker {ver.di} strike at the Port of Hamburg."
+
+
+def test_fenced_block_without_any_object_raises_decode_error() -> None:
+    with pytest.raises(json.JSONDecodeError):
+        parse_event("```json\nI cannot comply.\n```")

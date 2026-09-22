@@ -12,6 +12,7 @@ from chokepoint.agent.extractor import (
     ExtractionAgent,
     ExtractionSkipped,
 )
+from chokepoint.agent.prompts import PROMPT_VERSION
 from chokepoint.agent.providers.base import LLMProvider, Message
 from chokepoint.agent.providers.stub import StubLLMProvider
 from chokepoint.contracts import DisruptionEvent, EventType, RawDocument
@@ -42,7 +43,7 @@ def test_clean_fixture_yields_resolved_event(
     assert event.locations[0].node_id == "port_hamburg"  # layer ⑤ via aliases.yaml
     assert event.source_doc_id == hamburg_doc.doc_id
     assert event.extracted_at is not None
-    assert event.extractor_version == "stub-v1"
+    assert event.extractor_version == f"stub-{PROMPT_VERSION}"
     assert not event.extractor_version.startswith("fallback")
     assert agent.last_attempts == 1
     assert len(provider.calls) == 1
@@ -55,9 +56,11 @@ def test_prompt_sent_to_provider_has_system_fewshot_and_article(
     agent.extract(hamburg_doc)
     messages = provider.calls[0]
     assert messages[0]["role"] == "system"
-    assert "Output JSON only" in messages[0]["content"]
+    assert "You must return ONLY valid JSON inside a ```json code block." in messages[0]["content"]
+    assert "Do not output any other text." in messages[0]["content"]
     assert '"event_type"' in messages[0]["content"]  # schema inlined
     assert [m["role"] for m in messages[1:-1]] == ["user", "assistant"] * 3
+    assert all(m["content"].startswith("```json") for m in messages[2:-1:2])  # fenced examples
     assert messages[-1]["role"] == "user"
     assert hamburg_doc.title in messages[-1]["content"]
 
@@ -233,3 +236,102 @@ def test_provider_errors_are_not_swallowed(
 
     with pytest.raises(ConnectionError):
         ExtractionAgent(Down(), alias_index).extract(hamburg_doc)
+
+
+# ── extract_text: the API bridge (ad-hoc text -> synthetic RawDocument) ────────
+def test_extract_text_returns_valid_event_against_stub(
+    llm_fixtures_dir: Path, alias_index: dict[str, str]
+) -> None:
+    agent, provider = _agent(llm_fixtures_dir, alias_index)
+    event = agent.extract_text("A strike hit Hamburg Port")
+
+    assert isinstance(event, DisruptionEvent)
+    assert event.event_type is EventType.STRIKE
+    assert event.locations[0].node_id == "port_hamburg"  # layer ⑤ still runs
+    assert event.extractor_version == f"stub-{PROMPT_VERSION}"
+    assert len(provider.calls) == 1
+
+
+def test_extract_text_skips_relevance_gate_by_default(
+    llm_fixtures_dir: Path, alias_index: dict[str, str]
+) -> None:
+    # A user who pasted text has already decided it is relevant; the gate is for the firehose.
+    agent, provider = _agent(llm_fixtures_dir, alias_index)
+    event = agent.extract_text("Local bakery wins award for best sourdough")
+    assert isinstance(event, DisruptionEvent)
+    assert len(provider.calls) == 1
+
+
+def test_extract_text_apply_gate_opt_in_skips_irrelevant_text(
+    llm_fixtures_dir: Path, alias_index: dict[str, str]
+) -> None:
+    agent, provider = _agent(llm_fixtures_dir, alias_index)
+    with pytest.raises(ExtractionSkipped):
+        agent.extract_text("Local bakery wins award for best sourdough", apply_gate=True)
+    assert provider.calls == []  # zero tokens spent
+
+
+@pytest.mark.parametrize("blank", ["", "   ", "\n\t "])
+def test_extract_text_rejects_blank_text_without_calling_provider(
+    llm_fixtures_dir: Path, alias_index: dict[str, str], blank: str
+) -> None:
+    agent, provider = _agent(llm_fixtures_dir, alias_index)
+    with pytest.raises(ValueError, match="must not be empty"):  # API layer maps this to a 422
+        agent.extract_text(blank)
+    assert provider.calls == []  # an empty request must never burn a free-tier credit
+
+
+def test_extract_text_synthesises_a_deterministic_document(
+    llm_fixtures_dir: Path, alias_index: dict[str, str]
+) -> None:
+    text = "Dockworkers walked out at Hamburg Port. " * 5  # > 120 chars: title is truncated
+    agent, provider = _agent(llm_fixtures_dir, alias_index)
+    first = agent.extract_text(text)
+    second = agent.extract_text(text)
+
+    assert first.source_doc_id == second.source_doc_id  # sha256(text)[:16] — stable
+    assert first.source_doc_id is not None
+    assert len(first.source_doc_id) == 16
+    article = provider.calls[0][-1]["content"]
+    assert article.startswith(f"Title: {text[:120].strip()}")  # title = text[:120]
+    assert "Article: Dockworkers walked out" in article  # body = the full text
+
+
+def test_extract_text_shares_the_retry_loop(
+    llm_fixtures_dir: Path, alias_index: dict[str, str]
+) -> None:
+    agent, provider = _agent(
+        llm_fixtures_dir, alias_index, "strike_hamburg_invalid.txt", "strike_hamburg.txt"
+    )
+    event = agent.extract_text("A strike hit Hamburg Port")
+    assert agent.last_attempts == 2
+    assert len(provider.calls) == 2
+    assert not event.extractor_version.startswith("fallback")
+
+
+def test_extract_text_shares_the_heuristic_fallback(
+    llm_fixtures_dir: Path, alias_index: dict[str, str]
+) -> None:
+    agent, provider = _agent(llm_fixtures_dir, alias_index, "garbage.txt")
+    event = agent.extract_text("Dockworkers strike at Hamburg Port halts container handling")
+    assert len(provider.calls) == 3  # hard cap, same as extract()
+    assert event.extractor_version == FALLBACK_EXTRACTOR_VERSION  # -> orchestrator sets degraded
+    assert event.event_type is EventType.STRIKE
+    assert event.locations[0].node_id == "port_hamburg"
+
+
+def test_extract_still_applies_the_gate_to_ingested_documents(
+    llm_fixtures_dir: Path, alias_index: dict[str, str]
+) -> None:
+    # Regression guard for the _extract_from_doc refactor: extract() must keep gating.
+    agent, provider = _agent(llm_fixtures_dir, alias_index)
+    with pytest.raises(ExtractionSkipped):
+        agent.extract(make_doc("Local bakery wins award for best sourdough"))
+    assert provider.calls == []
+
+
+def test_agent_name_follows_the_provider(
+    llm_fixtures_dir: Path, alias_index: dict[str, str]
+) -> None:
+    agent, provider = _agent(llm_fixtures_dir, alias_index)
+    assert agent.name == provider.name == "stub"

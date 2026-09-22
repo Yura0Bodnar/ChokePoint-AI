@@ -10,20 +10,24 @@ from chokepoint.api import deps
 
 @pytest.fixture(autouse=True, scope="module")
 def _real_graph_backend() -> Iterator[None]:
-    """Run this module against the real NetworkX graph regardless of the developer's .env.
+    """Run this module against the real NetworkX graph and the stub LLM, regardless of .env.
 
     ``get_graph_store`` is lru_cache'd and ``DEMO_MODE=true`` would silently swap in the
     stub, which returns three canned nodes for *any* event and would make these tests
-    pass or fail for the wrong reason.
+    pass or fail for the wrong reason. ``LLM_PROVIDER`` is pinned to ``stub`` so a
+    developer's ``LLM_PROVIDER=hf`` never turns this module into a billed network call.
     """
     with pytest.MonkeyPatch.context() as patch:
         patch.setenv("DEMO_MODE", "false")
         patch.setenv("GRAPH_BACKEND", "networkx")
+        patch.setenv("LLM_PROVIDER", "stub")
         deps.get_settings.cache_clear()
         deps.get_graph_store.cache_clear()
+        deps.get_llm_provider.cache_clear()
         yield
     deps.get_settings.cache_clear()
     deps.get_graph_store.cache_clear()
+    deps.get_llm_provider.cache_clear()
 
 
 MINIMAL_EVENT_PAYLOAD = {

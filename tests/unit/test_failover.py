@@ -1,11 +1,18 @@
 from __future__ import annotations
 
+import threading
+
 import httpx
 import pytest
 from huggingface_hub.errors import HfHubHTTPError
 
 from chokepoint.agent.providers.base import LLMProvider, Message
-from chokepoint.agent.providers.failover import FailoverProvider, is_transport_failure
+from chokepoint.agent.providers.failover import (
+    FailoverProvider,
+    PrimaryUnavailableError,
+    is_transport_failure,
+    local_fallback_consent,
+)
 from chokepoint.agent.providers.stub import StubLLMProvider
 
 
@@ -94,3 +101,76 @@ def test_is_transport_failure_classification() -> None:
     assert is_transport_failure(ConnectionError())
     assert not is_transport_failure(ValueError())
     assert not is_transport_failure(KeyError())
+
+
+# ── require_consent: the local model is the user's explicit choice ─────────────────────
+def test_consent_mode_raises_instead_of_switching_when_primary_fails() -> None:
+    primary, local = Flaky(_http(402)), _local()
+    f = FailoverProvider(primary, local, require_consent=True)
+    with pytest.raises(PrimaryUnavailableError) as info:
+        f.chat(MESSAGES)
+    assert (info.value.primary, info.value.fallback) == ("hf", "local")
+    assert "HfHubHTTPError" in info.value.reason
+    assert local.calls == []
+    assert f.active is primary and f.name == "hf"
+
+
+def test_consent_mode_is_never_sticky() -> None:
+    primary, local = Flaky(_http(503)), _local()
+    f = FailoverProvider(primary, local, require_consent=True)
+    for _ in range(2):
+        with pytest.raises(PrimaryUnavailableError):
+            f.chat(MESSAGES)
+    assert primary.calls == 2  # HF is asked every time; local never happens silently
+    assert local.calls == []
+
+
+def test_consent_granted_skips_primary_and_answers_locally() -> None:
+    primary, local = Flaky(_http(402)), _local()
+    f = FailoverProvider(primary, local, require_consent=True)
+    with local_fallback_consent():
+        assert f.chat(MESSAGES) == "local"
+        assert f.name == "local" and f.supports_structured is False
+    assert primary.calls == 0  # HF is known-down: no second billed attempt
+    assert f.name == "hf" and f.supports_structured is True  # consent does not outlive the block
+
+
+def test_consent_mode_healthy_primary_answers_normally() -> None:
+    primary, local = Flaky(None), _local()
+    f = FailoverProvider(primary, local, require_consent=True)
+    assert f.chat(MESSAGES) == "primary"
+    assert local.calls == []
+
+
+def test_consent_mode_non_transport_errors_propagate() -> None:
+    f = FailoverProvider(Flaky(ValueError("bad messages")), _local(), require_consent=True)
+    with pytest.raises(ValueError, match="bad messages"):
+        f.chat(MESSAGES)
+
+
+def test_consent_is_scoped_to_its_own_request_thread() -> None:
+    f = FailoverProvider(Flaky(None), _local(), require_consent=True)
+    inside, release = threading.Event(), threading.Event()
+    seen: dict[str, str] = {}
+
+    def other_request() -> None:
+        with local_fallback_consent():
+            seen["other"] = f.name
+            inside.set()
+            release.wait(timeout=5)
+
+    worker = threading.Thread(target=other_request)
+    worker.start()
+    assert inside.wait(timeout=5)
+    seen["main"] = f.name  # another request holds consent right now
+    release.set()
+    worker.join(timeout=5)
+    assert seen == {"other": "local", "main": "hf"}
+
+
+def test_automatic_mode_ignores_consent() -> None:
+    primary, local = Flaky(None), _local()
+    f = FailoverProvider(primary, local)
+    with local_fallback_consent():
+        assert f.chat(MESSAGES) == "primary"
+        assert f.name == "hf"
