@@ -1,3 +1,15 @@
+---
+title: ChokePoint AI
+emoji: 🌍
+colorFrom: blue
+colorTo: red
+sdk: gradio
+sdk_version: 4.44.1
+app_file: app.py
+python_version: "3.12"
+pinned: false
+---
+
 # ChokePoint AI — Supply Chain Shock Simulator
 
 [![CI](https://github.com/Yura0Bodnar/ChokePoint-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/Yura0Bodnar/ChokePoint-AI/actions/workflows/ci.yml)

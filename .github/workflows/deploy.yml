@@ -1,7 +1,12 @@
-# Deploys by pushing this repo directly to the Hugging Face Space's git
-# remote; the Space rebuilds itself from the pushed Dockerfile. There is no
-# container registry step and no Terraform — infra is Docker + docker-compose
-# + GitHub Actions only (see ARCHITECTURE_AND_PLAN.md §10, Scope Adjustment).
+# Deploys by pushing this repo directly to the Hugging Face Space's git remote; the Space
+# rebuilds itself from the pushed README.md front matter + app.py. There is no container
+# registry step and no Terraform.
+#
+# SDK: "gradio", not "docker" (see README.md's YAML front matter and app.py). Docker Spaces
+# need a verified billing method on this Hugging Face account; the Gradio SDK does not, and
+# app.py is a thin adapter that runs the existing FastAPI app under it unchanged. Local dev
+# and CI (ci.yml) still use the Dockerfile / docker-compose; this workflow is the only place
+# that depends on the Space's own SDK choice.
 #
 # Required repo secrets (set manually via GitHub Settings -> Secrets -> Actions,
 # no automation creates these):
@@ -22,8 +27,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build Docker image (smoke check)
-        run: docker build -t chokepoint-ai:deploy .
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Space runtime dependencies (smoke check)
+        run: pip install -r requirements.txt
+
+      - name: Import the app exactly as the Space will run it
+        run: |
+          python -c "
+          from fastapi.testclient import TestClient
+          from app import app
+          resp = TestClient(app).get('/healthz')
+          assert resp.status_code == 200, resp.text
+          print('app.py imports and /healthz responds:', resp.json())
+          "
 
       - name: Push to Hugging Face Space
         env:
