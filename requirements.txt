@@ -24,3 +24,8 @@ uvicorn[standard]>=0.32
 # app.py never imports it — it runs the FastAPI app directly through uvicorn — but the
 # Gradio Space builder expects it to be declared as one of the app's dependencies.
 gradio>=4.44.1
+
+# HF's ZeroGPU client library — provides the `@spaces.GPU` decorator app.py uses to satisfy
+# the ZeroGPU supervisor's startup check (see app.py's `_warm_up_zerogpu`). Free personal
+# accounts can only host a Gradio Space on ZeroGPU hardware, which requires this.
+spaces>=0.51.3
