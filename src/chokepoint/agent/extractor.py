@@ -9,6 +9,13 @@
            └─ fail, attempt < max → repair prompt with the exact error text
            └─ fail, attempt = max → _fallback_extract (never raises)
 
+Two entry points share one pipeline (``_extract_from_doc``):
+
+* ``extract(doc)`` — a ``RawDocument`` from ingestion (GDELT / RSS). The
+  relevance gate runs, because the firehose is mostly noise.
+* ``extract_text(text)`` — free text pasted into ``POST /api/v1/simulate``. A
+  ``RawDocument`` is synthesised around it and the gate is skipped by default.
+
 ``parse_event``'s ``ValidationError`` / ``JSONDecodeError`` are caught here
 and **only** here, purely to drive the retry loop. Provider (network/HTTP)
 errors propagate — that is the caller's decision, not ours.
@@ -16,16 +23,18 @@ errors propagate — that is the caller's decision, not ours.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 from datetime import UTC, datetime
 
-from pydantic import ValidationError
+from pydantic import HttpUrl, ValidationError
 
 from chokepoint.agent.gate import is_relevant
 from chokepoint.agent.parser import parse_event
 from chokepoint.agent.prompts import PROMPT_VERSION, build_messages
 from chokepoint.agent.providers.base import LLMProvider, Message
+from chokepoint.agent.providers.failover import local_fallback_consent
 from chokepoint.agent.resolver import resolve_location
 from chokepoint.contracts import DisruptionEvent, EventType, ExtractedLocation, RawDocument
 
@@ -104,8 +113,67 @@ class ExtractionAgent:
         self.last_attempts = 0
 
     # ── public ────────────────────────────────────────────────────────────
+    @property
+    def name(self) -> str:
+        """Name of the provider currently answering (``hf`` / ``local`` / ``stub``).
+
+        Follows a ``FailoverProvider``'s active side. Exposed so callers that
+        only hold the agent (``api/orchestrator.py`` flags ``degraded`` when
+        ``llm.name == "stub"``) can still see which backend produced an event.
+        """
+        return self._provider.name
+
     def extract(self, doc: RawDocument) -> DisruptionEvent:
-        if not is_relevant(doc):
+        """Extract from a document that came out of the ingestion pipeline.
+
+        Runs the relevance gate: scraped feeds are mostly irrelevant, and the
+        gate drops those before a single token is spent (``ExtractionSkipped``).
+        """
+        return self._extract_from_doc(doc, skip_gate=False)
+
+    def extract_text(
+        self, text: str, *, apply_gate: bool = False, force_local: bool = False
+    ) -> DisruptionEvent:
+        """Ad-hoc entry point for text pasted directly into the API (not from the
+        ingestion pipeline).
+
+        Skips the relevance gate by default — a user who explicitly submitted text
+        has already made the relevance judgement the gate exists to automate for a
+        firehose of scraped articles. Pass ``apply_gate=True`` to opt back in.
+
+        ``force_local=True`` is the user's consent to run the slow local model: a
+        consent-mode ``FailoverProvider`` then skips HF and answers locally. Without
+        it, an HF outage raises ``PrimaryUnavailableError`` (the API maps it to 424).
+        Providers that have no local side ignore the flag.
+
+        ``contracts.RawDocument`` is frozen and requires a ``source`` of ``"gdelt"`` or
+        ``"rss"`` and a valid ``url``, so the synthetic document uses ``source="rss"``
+        (marked ``source_name="api-adhoc"``) and a placeholder ``chokepoint.local`` URL.
+
+        Raises ``ValueError`` for blank text so an empty request never spends an LLM
+        call (free-tier credits are scarce — see docs/PROMPTS.md §3); the API layer
+        maps ``ValueError`` to HTTP 422.
+        """
+        if not text.strip():
+            raise ValueError("text must not be empty")
+        doc_id = hashlib.sha256(text.encode()).hexdigest()[:16]
+        now = datetime.now(UTC)
+        doc = RawDocument(
+            doc_id=doc_id,
+            source="rss",
+            source_name="api-adhoc",
+            url=HttpUrl(f"https://chokepoint.local/adhoc/{doc_id}"),
+            title=text[:120],
+            body=text,
+            published_at=now,
+            fetched_at=now,
+        )
+        with local_fallback_consent(force_local):
+            return self._extract_from_doc(doc, skip_gate=not apply_gate)
+
+    # ── shared pipeline (formerly the body of extract()) ─────────────────
+    def _extract_from_doc(self, doc: RawDocument, *, skip_gate: bool = False) -> DisruptionEvent:
+        if not skip_gate and not is_relevant(doc):
             raise ExtractionSkipped(doc.doc_id)
 
         messages = build_messages(doc.title, doc.body, version=self._prompt_version)

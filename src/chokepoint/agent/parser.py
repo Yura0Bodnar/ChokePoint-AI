@@ -16,12 +16,37 @@ from json_repair import repair_json
 
 from chokepoint.contracts import DisruptionEvent
 
-_FENCE = re.compile(r"^\s*```(?:json)?\s*|\s*```\s*$", re.MULTILINE)
+#: A complete fenced block tagged ``json`` — what the v2 prompt asks the model to emit.
+#: Matches anywhere in the reply (after prose, inline, CRLF), lazily up to the first closing fence.
+_JSON_FENCED_BLOCK = re.compile(r"```[ \t]*json[ \t]*\r?\n?(.*?)```", re.DOTALL | re.IGNORECASE)
+#: Any complete fenced block (untagged, or another language tag) — a lenient second choice.
+_ANY_FENCED_BLOCK = re.compile(r"```[ \t]*[\w+-]*[ \t]*\r?\n?(.*?)```", re.DOTALL)
+#: Stray fence lines left over when a block is never closed (e.g. output cut off at max_tokens).
+_STRAY_FENCE = re.compile(r"^\s*```(?:json)?\s*|\s*```\s*$", re.MULTILINE)
+
+
+def _fenced_payload(raw: str) -> str | None:
+    """The text inside the first markdown code block that holds a JSON object, if any."""
+    match = _JSON_FENCED_BLOCK.search(raw)
+    if match:
+        return match.group(1)
+    for match in _ANY_FENCED_BLOCK.finditer(raw):
+        if "{" in match.group(1):
+            return match.group(1)
+    return None
 
 
 def extract_json_blob(raw: str) -> str:
-    """Strip fences and any surrounding prose; keep the outermost object."""
-    s = _FENCE.sub("", raw).strip()
+    """Pull the JSON text out of a model reply; keep the outermost object.
+
+    1. A markdown block (```` ```json … ``` ````, or any fence holding a ``{``) is matched with
+       a regex and only its contents are kept, so prose before/after — even prose that itself
+       contains braces — cannot leak into the JSON.
+    2. Otherwise stray fence markers are stripped (covers an unclosed, truncated block).
+    3. Either way the result is trimmed to the outermost ``{ … }``.
+    """
+    fenced = _fenced_payload(raw)
+    s = (fenced if fenced is not None else _STRAY_FENCE.sub("", raw)).strip()
     start, end = s.find("{"), s.rfind("}")
     return s[start : end + 1] if start != -1 and end > start else s
 

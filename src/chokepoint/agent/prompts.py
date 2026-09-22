@@ -5,9 +5,10 @@ Rules for this file:
 * **Never edit a prompt version in place** once it has a recorded score in
   ``docs/PROMPTS.md``. Add ``SYSTEM_V2`` / ``FEW_SHOT_V2`` and bump
   ``PROMPT_VERSION`` instead.
-* The schema is inlined into the system message *as well as* passed via
-  ``response_format`` by the provider. Redundancy is cheap; a failed
-  extraction is not.
+* The schema is inlined into the system message. No provider sends a
+  ``response_format`` (the free HF tier rejects it with HTTP 400), so the prompt
+  and the fence-aware parser (``agent/parser.py``) carry the whole structure
+  guarantee.
 * Few-shot pairs cover the hard cases: a single-location strike, a
   multi-location event, and one with ``affected_goods = []`` so the model
   learns it may emit an empty list rather than hallucinate a commodity.
@@ -20,7 +21,7 @@ import json
 from chokepoint.agent.providers.base import Message
 from chokepoint.agent.schema import DISRUPTION_EVENT_JSON_SCHEMA
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 
 #: Body truncation keeps title + body near ~1,500 tokens. Longer input
 #: measurably degrades small-model format adherence and burns free credits.
@@ -31,6 +32,38 @@ disruption event from the article and return a single JSON object.
 
 Rules:
 - Output JSON only. No markdown, no code fences, no commentary.
+- event_type MUST be one of: strike, blockade, sanctions, accident, conflict,
+  natural_disaster, cyberattack, congestion, export_ban,
+  infrastructure_failure, other.
+- locations: use the exact wording from the article in "raw". 1-5 entries.
+  Set "node_id" to null and "country_iso2" to the ISO 3166-1 alpha-2 code
+  of the country if it is clear from the article, otherwise null.
+- affected_goods: lowercase commodity or industry terms. Use [] if the article
+  names none. NEVER guess goods that are not supported by the text.
+- severity: 1 = minor delay, 3 = significant regional disruption,
+  5 = full closure of a major corridor.
+- estimated_duration_days: integer days if the article states or clearly
+  implies a duration, otherwise null.
+- confidence: your own certainty (0.0-1.0) that this article describes a real,
+  current logistics disruption.
+- summary: one plain sentence, at most 200 characters.
+- Do not emit source_doc_id, extractor_version or extracted_at.
+
+Schema:
+{schema}
+"""
+
+#: v2 = v1's rules with the output contract changed to "one ```json fenced block, nothing
+#: else" — the shape that models behind the free HF tier follow most reliably now that
+#: ``response_format`` is gone. ``parser.extract_json_blob`` pulls the JSON out of the fence.
+SYSTEM_V2 = """You are a supply-chain OSINT analyst. Extract ONE logistics \
+disruption event from the article and return a single JSON object.
+
+You must return ONLY valid JSON inside a ```json code block. Do not output any other text.
+
+Rules:
+- Your entire reply is one ```json fenced block containing exactly one JSON object:
+  nothing before the opening fence, nothing after the closing fence.
 - event_type MUST be one of: strike, blockade, sanctions, accident, conflict,
   natural_disaster, cyberattack, congestion, export_ban,
   infrastructure_failure, other.
@@ -116,8 +149,14 @@ FEW_SHOT_V1: list[tuple[str, str]] = [
     ),
 ]
 
-_SYSTEM_BY_VERSION: dict[str, str] = {"v1": SYSTEM_V1}
-_FEW_SHOT_BY_VERSION: dict[str, list[tuple[str, str]]] = {"v1": FEW_SHOT_V1}
+# Same articles and JSON as v1; the assistant turns are fenced so the examples demonstrate
+# exactly the format SYSTEM_V2 demands (a bare-JSON example would contradict the rule).
+FEW_SHOT_V2: list[tuple[str, str]] = [
+    (user, f"```json\n{assistant}\n```") for user, assistant in FEW_SHOT_V1
+]
+
+_SYSTEM_BY_VERSION: dict[str, str] = {"v1": SYSTEM_V1, "v2": SYSTEM_V2}
+_FEW_SHOT_BY_VERSION: dict[str, list[tuple[str, str]]] = {"v1": FEW_SHOT_V1, "v2": FEW_SHOT_V2}
 
 
 def render_system(version: str = PROMPT_VERSION) -> str:
@@ -157,9 +196,11 @@ def build_messages(
 
 __all__ = [
     "FEW_SHOT_V1",
+    "FEW_SHOT_V2",
     "MAX_BODY_CHARS",
     "PROMPT_VERSION",
     "SYSTEM_V1",
+    "SYSTEM_V2",
     "build_messages",
     "format_article",
     "render_system",

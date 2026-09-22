@@ -1,4 +1,4 @@
-"""JSON Schema handed to the model via ``response_format`` (ladder layer ①).
+"""JSON Schema of ``DisruptionEvent``, inlined into the system prompt (``agent/prompts.py``).
 
 Derived from the frozen contract at import time — one source of truth, zero
 schema drift. Never hand-write a parallel schema here.

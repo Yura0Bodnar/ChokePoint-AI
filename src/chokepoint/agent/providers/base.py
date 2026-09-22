@@ -20,15 +20,20 @@ Message = dict[str, str]
 
 @runtime_checkable
 class LLMProvider(Protocol):
-    name: str
-    supports_structured: bool
+    # Read-only on purpose: a ``FailoverProvider`` computes both per call (they depend on
+    # which side is answering), so they cannot be plain mutable attributes.
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def supports_structured(self) -> bool: ...
 
     def chat(self, messages: list[Message], *, structured: bool = True) -> str:
         """Return the model's raw text reply for ``messages``.
 
-        ``structured=True`` asks the provider to enforce the
-        :class:`~chokepoint.contracts.DisruptionEvent` JSON schema at decode
-        time when it can (ladder layer ①). Providers that cannot must still
-        return whatever the model produced — the parser handles the rest.
+        ``structured`` is kept for API compatibility: no built-in provider sends a
+        ``response_format`` any more (the free HF tier rejects it with HTTP 400), so
+        every provider returns whatever the model produced and the fence-aware parser
+        does the rest.
         """
         ...

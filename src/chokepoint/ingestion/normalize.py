@@ -1,5 +1,6 @@
 import logging
 from datetime import UTC, datetime
+from typing import Any
 
 from chokepoint.contracts import RawDocument
 from chokepoint.ingestion.dedupe import doc_id_from_url
@@ -19,7 +20,7 @@ def _parse_gdelt_date(value: str | None) -> datetime | None:
     return None
 
 
-def gdelt_article_to_raw_document(article: dict) -> RawDocument | None:
+def gdelt_article_to_raw_document(article: dict[str, Any]) -> RawDocument | None:
     """Normalize one GDELT row, returning None for malformed rows."""
     try:
         url = article.get("url")
