@@ -21,10 +21,14 @@
     eventJson: document.getElementById("event-json"),
     unresolvedNote: document.getElementById("unresolved-note"),
     degradedBadge: document.getElementById("degraded-badge"),
+    summaryCard: document.getElementById("summary-card"),
+    summaryText: document.getElementById("summary-text"),
     graphHint: document.getElementById("graph-hint"),
     severitySlider: document.getElementById("severity-slider"),
     severityValue: document.getElementById("severity-value"),
     forecastRows: document.getElementById("forecast-rows"),
+    fallbackDialog: document.getElementById("fallback-dialog"),
+    fallbackReason: document.getElementById("fallback-reason"),
     pipelineSteps: Array.from(document.querySelectorAll(".pipeline-step")),
   };
 
@@ -52,6 +56,8 @@
           color: "#111827", // gray-900: high-contrast label text on white
           "text-valign": "bottom",
           "text-margin-y": 7,
+          "text-wrap": "wrap",
+          "text-max-width": "100px",
           // white plate behind labels so edges never strike through the text
           "text-background-color": "#ffffff",
           "text-background-opacity": 0.92,
@@ -154,10 +160,26 @@
   }
 
   // ── Rendering ─────────────────────────────────────────────────────────
+  /** The "Intelligence brief" card. Only ever revealed from here, i.e. after a successful
+   * run; a missing or blank summary keeps it hidden rather than showing an empty card. */
+  function renderSummary(summary) {
+    const text = typeof summary === "string" ? summary.trim() : "";
+    const changed = text !== els.summaryText.textContent;
+    els.summaryText.textContent = text; // textContent: the model's text is never parsed as HTML
+    els.summaryCard.hidden = text === "";
+    if (text !== "" && changed) {
+      // Re-trigger the fade only for a new summary, not on every what-if slider re-run.
+      els.summaryCard.classList.remove("fade-in");
+      void els.summaryCard.offsetWidth;
+      els.summaryCard.classList.add("fade-in");
+    }
+  }
+
   function renderEvent(event, degraded) {
     els.eventJson.textContent = JSON.stringify(event, null, 2);
     els.eventJson.classList.add("fade-in");
     els.degradedBadge.hidden = !degraded;
+    renderSummary(event.summary);
 
     const unresolved = event.locations.filter((loc) => !loc.node_id);
     if (unresolved.length > 0) {
@@ -209,7 +231,7 @@
 
     cy.elements().remove();
     cy.add([...nodes, ...edges]);
-    cy.layout({ name: "breadthfirst", roots: result.epicentre_node_ids, directed: true, spacingFactor: 1.3 }).run();
+    cy.layout({ name: "breadthfirst", roots: result.epicentre_node_ids, directed: true, spacingFactor: 1.5 }).run();
     cy.fit(undefined, 40);
     pulseEpicentres();
 
@@ -225,20 +247,29 @@
     els.forecastRows.innerHTML = "";
     for (const node of impacted) {
       const tr = document.createElement("tr");
-      tr.className = "cursor-pointer border-t border-gray-200 hover:bg-blue-50";
+      tr.className =
+        "forecast-row cursor-pointer border-t border-gray-200 transition-colors hover:bg-blue-50";
       tr.dataset.nodeId = node.node_id;
-      tr.title = node.explanation;
+      const pct = Math.max(0, Math.min(100, node.impact_score * 100));
+      // Impact bar: a thin orange fill whose width is the impact out of 100%, on a gray track,
+      // directly under the percentage. Plain Tailwind utilities (no custom CSS to go stale);
+      // the 3px floor keeps a non-zero impact visible in the narrow column.
       tr.innerHTML = `
-        <td class="px-1 py-2 font-semibold text-gray-900">${escapeHtml(node.label)}</td>
-        <td class="px-1 py-2">
-          <span class="font-mono font-bold text-gray-900">${(node.impact_score * 100).toFixed(0)}%</span>
-          <div class="mt-1 h-1.5 w-14 overflow-hidden rounded-full bg-gray-200">
-            <div class="h-full rounded-full" style="width:${Math.max(4, node.impact_score * 100)}%;background:${impactColor(node.impact_score)}"></div>
+        <td class="truncate px-2.5 py-2.5 font-semibold text-gray-900">${escapeHtml(node.label)}</td>
+        <td class="px-2.5 py-2.5">
+          <div class="flex flex-col items-end gap-1">
+            <span class="font-bold tabular-nums text-gray-900">${pct.toFixed(0)}%</span>
+            <div class="h-1.5 w-full overflow-hidden rounded-full bg-gray-200" aria-hidden="true">
+              <div class="h-full rounded-full bg-orange-500" style="width:${pct}%;min-width:${pct > 0 ? 3 : 0}px"></div>
+            </div>
           </div>
         </td>
-        <td class="px-1 py-2 text-gray-700">${node.eta_days.toFixed(1)}d</td>
-        <td class="px-1 py-2 text-gray-700">${node.hops}</td>
+        <td class="px-2.5 py-2.5 text-right tabular-nums text-gray-700">${node.eta_days.toFixed(1)}d</td>
+        <td class="px-2.5 py-2.5 text-right tabular-nums text-gray-700">${node.hops}</td>
       `;
+      // The Node cell is truncated with an ellipsis, so put the full name in a native tooltip.
+      // Set as a DOM property (not inside the template) so any label text is escaped for free.
+      tr.firstElementChild.title = node.label;
       tr.addEventListener("click", () => {
         cy.nodes().removeClass("selected-row");
         const target = cy.getElementById(node.node_id);
@@ -282,11 +313,35 @@
   /** Loading state for the full text -> LLM -> graph run. The what-if slider
    * is deliberately NOT disabled during its own (fast) re-runs: disabling a
    * focused input drops keyboard focus after every change. */
-  function setLoading(isLoading) {
+  function setLoading(isLoading, label = "Simulating…") {
     els.runBtn.disabled = isLoading;
     els.severitySlider.disabled = isLoading || lastEvent === null;
     els.runSpinner.hidden = !isLoading;
-    els.runLabel.textContent = isLoading ? "Simulating…" : "Simulate";
+    els.runLabel.textContent = isLoading ? label : "Simulate";
+  }
+
+  /** The API answers HTTP 424 `{detail: {code: "hf_unavailable", ...}}` when Hugging Face
+   * failed and the slow local model needs the user's consent (`force_local: true`). */
+  class HfUnavailableError extends Error {
+    constructor(message, reason) {
+      super(message);
+      this.reason = reason;
+    }
+  }
+
+  /** Native <dialog>, not window.confirm(): styled, focus-trapped, Esc = Cancel.
+   * Resolves true only for "Run Local". */
+  function askRunLocally(reason) {
+    const dialog = els.fallbackDialog;
+    els.fallbackReason.hidden = !reason;
+    els.fallbackReason.textContent = reason ? `Reason: ${reason}` : "";
+    return new Promise((resolve) => {
+      dialog.returnValue = "";
+      dialog.addEventListener("close", () => resolve(dialog.returnValue === "run-local"), {
+        once: true,
+      });
+      dialog.showModal();
+    });
   }
 
   async function postSimulate(payload) {
@@ -302,9 +357,36 @@
     }
     const body = await resp.json().catch(() => null);
     if (!resp.ok) {
+      const detail = body && body.detail;
+      if (resp.status === 424 && detail && detail.code === "hf_unavailable") {
+        throw new HfUnavailableError(detail.message, detail.reason);
+      }
       throw new Error(extractErrorMessage(body));
     }
     return body;
+  }
+
+  /** Text -> event -> graph. If Hugging Face is down, pause and let the user decide whether
+   * to run the ~40 s local model; resolves null when they decline. */
+  async function extractAndSimulate(text) {
+    let hfError;
+    try {
+      return await postSimulate({ text });
+    } catch (err) {
+      if (!(err instanceof HfUnavailableError)) throw err;
+      hfError = err;
+    }
+
+    setLoading(false);
+    els.status.textContent = "Hugging Face API is unavailable.";
+    if (!(await askRunLocally(hfError.reason))) {
+      els.status.textContent = "Cancelled: Hugging Face API is unavailable.";
+      return null;
+    }
+
+    setLoading(true, "Running locally…");
+    els.status.textContent = "Running the model locally on CPU. This may take ~40 seconds…";
+    return postSimulate({ text, force_local: true });
   }
 
   async function runFromText() {
@@ -320,8 +402,8 @@
     els.status.textContent = "Extracting event and simulating…";
 
     try {
-      const result = await postSimulate({ text });
-      if (requestId !== latestRequestId) return;
+      const result = await extractAndSimulate(text);
+      if (result === null || requestId !== latestRequestId) return;
       lastEvent = result.event;
       els.severitySlider.value = String(result.event.severity);
       els.severityValue.textContent = String(result.event.severity);
@@ -412,6 +494,11 @@
 
   // ── Wire up events ────────────────────────────────────────────────────
   els.runBtn.addEventListener("click", runFromText);
+
+  // A click on the dimmed backdrop lands on the <dialog> itself (its form fills the box).
+  els.fallbackDialog.addEventListener("click", (e) => {
+    if (e.target === els.fallbackDialog) els.fallbackDialog.close("cancel");
+  });
 
   els.textInput.addEventListener("focus", () => setActiveStep(0), { once: true });
 

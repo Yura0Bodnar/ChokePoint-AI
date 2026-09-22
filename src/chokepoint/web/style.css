@@ -90,6 +90,26 @@ body {
   }
 }
 
+/* ── Local-model consent dialog ───────────────────────────────────────── */
+.fallback-dialog {
+  width: min(30rem, calc(100vw - 2rem));
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 0.875rem;
+  background: #ffffff;
+  color: #374151;
+  box-shadow: 0 24px 48px rgb(17 24 39 / 0.3);
+}
+
+.fallback-dialog[open] {
+  animation: fade-in 0.18s ease;
+}
+
+.fallback-dialog::backdrop {
+  background: rgb(17 24 39 / 0.55);
+  backdrop-filter: blur(2px);
+}
+
 /* ── Severity slider ──────────────────────────────────────────────────── */
 input[type="range"] {
   -webkit-appearance: none;

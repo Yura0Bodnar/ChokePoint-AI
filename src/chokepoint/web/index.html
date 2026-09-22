@@ -8,7 +8,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%A2%3C/text%3E%3C/svg%3E" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js"></script>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/style.css?v=3" />
 </head>
 <body class="min-h-screen bg-gray-100 text-gray-700 antialiased">
   <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -66,8 +66,25 @@
       </div>
     </section>
 
+    <!-- ── Intelligence brief: event.summary, shown only after a successful run ── -->
+    <section
+      id="summary-card"
+      hidden
+      aria-labelledby="summary-label"
+      aria-live="polite"
+      class="mt-6 rounded-xl border border-slate-200 border-l-4 border-l-blue-600 bg-slate-50 px-5 py-4 shadow-sm"
+    >
+      <h2 id="summary-label" class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-blue-700">
+        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+        </svg>
+        Intelligence brief
+      </h2>
+      <p id="summary-text" class="mt-2 text-lg font-medium leading-relaxed text-gray-800 sm:text-xl sm:leading-relaxed"></p>
+    </section>
+
     <!-- ── Main 3-column layout: input/JSON → graph → forecast/what-if ── -->
-    <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)_minmax(0,310px)] xl:grid-cols-[minmax(0,340px)_minmax(0,1fr)_minmax(0,360px)]">
+    <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,250px)_minmax(0,1fr)_minmax(0,360px)] xl:grid-cols-[minmax(0,300px)_minmax(0,1fr)_minmax(0,460px)]">
 
       <!-- LEFT / TOP: input + extracted JSON -->
       <aside class="flex flex-col gap-4">
@@ -83,12 +100,12 @@
             placeholder="e.g. Port Workers Strike in Hamburg"
           >Port Workers Strike in Hamburg halts container operations, delaying auto parts shipments to Poland.</textarea>
 
-          <div class="mt-3 flex items-center gap-3">
+          <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
             <button
               id="run-btn"
               type="button"
               data-tip="Runs the full pipeline: LLM extraction → graph simulation."
-              class="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-5 py-2.5 text-base font-bold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-60"
+              class="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg bg-blue-700 px-5 py-2.5 text-base font-bold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-60"
             >
               <span id="run-spinner" class="spinner" hidden></span>
               <span id="run-label">Simulate</span>
@@ -145,13 +162,19 @@
         <div class="rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
           <h2 class="mb-2 text-base font-bold text-gray-900">Forecast</h2>
           <div class="scroll-thin max-h-[26rem] overflow-auto">
-            <table class="w-full text-left text-sm">
-              <thead class="sticky top-0 bg-gray-100 text-xs uppercase tracking-wide text-gray-700">
+            <table class="w-full table-fixed text-left text-sm">
+              <colgroup>
+                <col />
+                <col class="w-[6.5rem]" />
+                <col class="w-[3.75rem]" />
+                <col class="w-11" />
+              </colgroup>
+              <thead class="sticky top-0 z-10 bg-gray-100 text-xs uppercase tracking-wide text-gray-700">
                 <tr>
-                  <th class="px-1 py-2 font-bold">Node</th>
-                  <th class="px-1 py-2 font-bold">Impact</th>
-                  <th class="px-1 py-2 font-bold">ETA</th>
-                  <th class="px-1 py-2 font-bold">Hops</th>
+                  <th class="px-2.5 py-2.5 font-bold">Node</th>
+                  <th class="px-2.5 py-2.5 text-right font-bold">Impact</th>
+                  <th class="px-2.5 py-2.5 text-right font-bold">ETA</th>
+                  <th class="px-2.5 py-2.5 text-right font-bold">Hops</th>
                 </tr>
               </thead>
               <tbody id="forecast-rows">
@@ -169,6 +192,33 @@
     </footer>
   </div>
 
-  <script src="/app.js"></script>
+  <!-- ── Local-model consent dialog (opened by app.js when HF is down: HTTP 424) ── -->
+  <dialog id="fallback-dialog" class="fallback-dialog" aria-labelledby="fallback-title" aria-describedby="fallback-message">
+    <form method="dialog" class="p-6">
+      <div class="flex items-start gap-4">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-100 text-2xl text-amber-800" aria-hidden="true">⚠</span>
+        <div class="min-w-0">
+          <h2 id="fallback-title" class="text-lg font-extrabold text-gray-900">Run the model locally?</h2>
+          <p id="fallback-message" class="mt-1 text-base text-gray-700">Hugging Face API is unavailable. Would you like to run the model locally? (This may take ~40 seconds)</p>
+          <p id="fallback-reason" hidden class="mt-3 break-words rounded-md bg-gray-100 px-2.5 py-1.5 font-mono text-xs text-gray-700"></p>
+        </div>
+      </div>
+      <div class="mt-6 flex flex-wrap justify-end gap-3">
+        <button
+          type="submit"
+          value="cancel"
+          class="rounded-lg border border-gray-400 bg-white px-4 py-2 text-base font-semibold text-gray-800 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+        >Cancel</button>
+        <button
+          type="submit"
+          value="run-local"
+          autofocus
+          class="rounded-lg bg-blue-700 px-5 py-2 text-base font-bold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2"
+        >Run Local</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/app.js?v=3"></script>
 </body>
 </html>
