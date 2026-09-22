@@ -9,6 +9,10 @@ services:
       - ./src:/app/src:ro # hot reload in dev
       - ./tests:/app/tests:ro # edit tests without rebuilding the image
       - ./data:/app/data
+      # Hugging Face model cache (the dev image runs as root): the local-fallback weights
+      # (~3 GB) are downloaded once and survive container rebuilds. A named volume, not a
+      # host bind: Docker would create a missing host dir as root and break host-side HF tools.
+      - hf-cache:/root/.cache/huggingface
     command:
       [
         "uv",
@@ -21,3 +25,6 @@ services:
         "7860",
         "--reload",
       ]
+
+volumes:
+  hf-cache:

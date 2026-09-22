@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "ChokePoint AI — Supply Chain Shock Simulator"
 readme = "README.md"
 authors = [
-    { name = "Yurii Bodnar", email = "yurii.bodnar@globallogic.com" }
+    { name = "Yurii Bodnar" }
 ]
 requires-python = ">=3.12"
 dependencies = [
@@ -70,6 +70,13 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = ["chokepoint.contracts"]
 strict = true
+
+# The `local` dependency group (torch + transformers) is intentionally not installed in
+# CI or the default dev env, so mypy cannot resolve them. They are imported lazily in
+# agent/providers/local_hf.py only.
+[[tool.mypy.overrides]]
+module = ["torch", "transformers"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

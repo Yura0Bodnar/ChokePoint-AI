@@ -1,8 +1,7 @@
 # Deploys by pushing this repo directly to the Hugging Face Space's git
 # remote; the Space rebuilds itself from the pushed Dockerfile. There is no
 # container registry step and no Terraform — infra is Docker + docker-compose
-# + GitHub Actions only (see ARCHITECTURE_AND_PLAN.md §10, Scope Adjustment
-# in PROMPT_P3_BACKEND_DEVOPS.md).
+# + GitHub Actions only (see ARCHITECTURE_AND_PLAN.md §10, Scope Adjustment).
 #
 # Required repo secrets (set manually via GitHub Settings -> Secrets -> Actions,
 # no automation creates these):

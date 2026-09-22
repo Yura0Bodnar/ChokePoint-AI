@@ -5,13 +5,14 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
 
-# ---- dev: full dependency set (pytest, ruff, mypy, ...), source is volume-mounted ----
+# ---- dev: full dependency set (pytest, ruff, mypy, ...) + the `local` group (CPU torch +
+# transformers) so the LLM_FAILOVER_TO_LOCAL fallback works; source is volume-mounted ----
 FROM base AS dev
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --all-extras --dev --no-install-project
+    uv sync --frozen --all-extras --dev --group local --no-install-project
 COPY src/ ./src/
 COPY tests/ ./tests/
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --all-extras --dev
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --all-extras --dev --group local
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 EXPOSE 7860
 CMD ["uv", "run", "uvicorn", "chokepoint.api.main:app", "--host", "0.0.0.0", "--port", "7860", "--reload"]

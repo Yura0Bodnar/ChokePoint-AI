@@ -28,10 +28,10 @@ jobs:
           uv run ruff format --check .
 
       - name: Typecheck
-        run: uv run mypy src/chokepoint/contracts.py
+        run: uv run mypy src
 
       - name: Test
-        run: uv run pytest -m "not live" --cov=chokepoint --cov-report=term-missing
+        run: uv run pytest --cov=chokepoint --cov-report=term-missing
 
       - name: Build Docker image
         run: docker build -t chokepoint-ai:ci .
