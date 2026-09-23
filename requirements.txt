@@ -23,7 +23,19 @@ uvicorn[standard]>=0.32
 # Required by the Space's "sdk: gradio" declaration in README.md's YAML front matter.
 # app.py never imports it — it runs the FastAPI app directly through uvicorn — but the
 # Gradio Space builder expects it to be declared as one of the app's dependencies.
-gradio>=4.44.1
+#
+# Pinned EXACTLY to match README.md's "sdk_version" (not just a floor): sdk_version selects
+# the pre-built base image the Space actually boots from, independent of what pip would
+# resolve here on its own. A mismatch is what caused a real incident: sdk_version was 4.44.1
+# while huggingface-hub (below) floats unpinned, and gradio==4.44.1's gradio/oauth.py does
+# `from huggingface_hub import HfFolder`, an API huggingface_hub has since removed — crashing
+# with "ImportError: cannot import name 'HfFolder' from 'huggingface_hub'" on every startup.
+# Reproduced directly: pip install "gradio==4.44.1" "huggingface_hub" (latest) then
+# `import gradio` raises exactly that error. gradio==6.28.0 itself requires
+# huggingface-hub>=1.16.0,<2.0 and fastapi>=0.115.2,<1.0, both satisfied by this file, and
+# `spaces` (below) declares no gradio version bound at all. If you ever bump this version,
+# bump README.md's sdk_version to the identical value in the same change.
+gradio==6.28.0
 
 # HF's ZeroGPU client library — provides the `@spaces.GPU` decorator app.py uses to satisfy
 # the ZeroGPU supervisor's startup check (see app.py's `_warm_up_zerogpu`). Free personal
