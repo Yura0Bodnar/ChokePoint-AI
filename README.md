@@ -73,6 +73,8 @@ impact(target) = impact(source) x edge_weight x decay^hops x (1 - resilience) x 
   example Rotterdam absorbing Hamburg traffic). Cycle-safe; contributions below 0.02 are pruned.
 
 The what-if severity slider re-runs **only** the graph, so it is instant and never calls the LLM.
+Every edge weight in the seed graph is sourced and documented in
+[`SOURCES.md`](src/chokepoint/graph/seed/SOURCES.md).
 
 ### Reliability by design
 
@@ -123,15 +125,14 @@ src/chokepoint/
 tests/               # unit, integration, eval (golden set); live/local tests are opt-in
 ```
 
-## Documentation
+## Known limitations
 
-- [`RUN_INSTRUCTIONS.md`](RUN_INSTRUCTIONS.md): how to run and test everything.
-- [`docs/PROMPTS.md`](docs/PROMPTS.md): prompt versions, the measured Hugging Face support matrix and failover design.
-- [`ARCHITECTURE_AND_PLAN.md`](ARCHITECTURE_AND_PLAN.md): full architecture and design rationale.
-- [`src/chokepoint/graph/seed/SOURCES.md`](src/chokepoint/graph/seed/SOURCES.md): provenance of every graph weight.
+- News ingestion accepts pasted text today; the GDELT fetcher (`scripts/fetch_sample_news.py`)
+  collects and stores raw articles but is not yet wired into a live feed.
+- Lookup by `doc_id` is intentionally unimplemented — there is no document store yet.
+- Free-tier Hugging Face inference credits are limited, which is why the local CPU fallback and
+  the offline stub provider exist.
 
-## Scope notes
+---
 
-Input is pasted text; the GDELT fetcher (`scripts/fetch_sample_news.py`) stores raw articles but is
-not yet wired into a live feed. Lookup by `doc_id` is intentionally unimplemented. Free Hugging Face
-credits are tiny, which is why the local fallback and the offline stub exist.
+Maintained by [Yura0Bodnar](https://github.com/Yura0Bodnar).
